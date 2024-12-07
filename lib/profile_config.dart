@@ -1,3 +1,5 @@
+// profile_config.dart
+
 import 'package:flutter/material.dart';
 
 enum FieldType {
@@ -64,6 +66,13 @@ String? validateGender(String? value) {
   return null;
 }
 
+String? validateCGPA(String? value) {
+  if (value == null || value.isEmpty) return 'CGPA diperlukan';
+  if (double.tryParse(value) == null) return 'CGPA mesti nombor';
+  if (double.parse(value) < 0 || double.parse(value) > 4.0) return 'CGPA mesti antara 0 hingga 4.0';
+  return null;
+}
+
 // Personal Fields
 List<FieldDefinition> personalFields = [
   FieldDefinition(key: 'fullName', label: 'Nama Penuh', type: FieldType.text, validator: validateName),
@@ -114,55 +123,10 @@ List<FieldDefinition> academicsFields = [
   FieldDefinition(key: 'spmYear', label: 'Tahun (SPM)', type: FieldType.number, validator: validateNotEmpty),
   FieldDefinition(key: 'spmCertificateType', label: 'Jenis Sijil (SPM)', type: FieldType.text, validator: validateNotEmpty),
   FieldDefinition(key: 'spmRank', label: 'Pangkat (SPM)', type: FieldType.text, validator: validateNotEmpty),
-  FieldDefinition(key: 'matriculationCGPA', label: 'CGPA (Matrikulasi)', type: FieldType.number, validator: validateNotEmpty),
+  FieldDefinition(key: 'matriculationCGPA', label: 'CGPA (Matrikulasi)', type: FieldType.number, validator: validateCGPA),
   FieldDefinition(key: 'higherEducationField', label: 'Bidang Pengajian (HE)', type: FieldType.text, validator: validateNotEmpty),
-  FieldDefinition(key: 'higherEducationCGPA', label: 'CGPA (HE)', type: FieldType.number, validator: validateNotEmpty),
+  FieldDefinition(key: 'higherEducationCGPA', label: 'CGPA (HE)', type: FieldType.number, validator: validateCGPA),
 ];
 
-// Resume Fields (Previously Skills Fields)
-// We now combine Skills, Languages, Sukan, Pengalaman, and Kesihatan placeholders here:
-List<FieldDefinition> resumeFields = [
-  // SKILLS
-  FieldDefinition(key: 'skillName', label: 'Nama Kemahiran (Contoh: Memasak)', type: FieldType.text, validator: validateNotEmpty),
-  FieldDefinition(
-    key: 'skillLevel',
-    label: 'Tahap Kemahiran',
-    type: FieldType.dropdown,
-    options: ['SANGAT MAHIR', 'MAHIR', 'KURANG MAHIR'],
-    validator: validateNotEmpty,
-  ),
 
-  // LANGUAGES
-  FieldDefinition(key: 'languageName', label: 'Nama Bahasa (Contoh: Bahasa Melayu)', type: FieldType.text, validator: validateNotEmpty),
-  FieldDefinition(
-    key: 'languageLevel',
-    label: 'Tahap Fasih Bahasa',
-    type: FieldType.dropdown,
-    options: ['SANGAT FASIH', 'FASIH', 'KURANG FASIH'],
-    validator: validateNotEmpty,
-  ),
-
-  // SUKAN
-  FieldDefinition(key: 'sukanYear', label: 'Tahun Penyertaan Sukan', type: FieldType.number, validator: validateNotEmpty),
-  FieldDefinition(key: 'sukanName', label: 'Nama Sukan', type: FieldType.text, validator: validateNotEmpty),
-  FieldDefinition(
-    key: 'sukanLevel',
-    label: 'Tahap Penyertaan Sukan',
-    type: FieldType.dropdown,
-    options: ['Antarabangsa', 'Kebangsaan', 'Negeri', 'Daerah'],
-    validator: validateNotEmpty,
-  ),
-
-  // PENGALAMAN
-  FieldDefinition(
-    key: 'pengalamanDuration',
-    label: 'Tempoh Pengalaman',
-    type: FieldType.dropdown,
-    options: ['Kurang Setahun', 'Kurang Tiga Tahun', 'Lebih Tiga Tahun'],
-    validator: validateNotEmpty,
-  ),
-
-  // KESIHATAN (Placeholder)
-  // You mentioned you will do Kesihatan yourself, so we'll just put a placeholder text field:
-  FieldDefinition(key: 'kesihatanInfo', label: 'Info Kesihatan (Placeholder)', type: FieldType.text, validator: validateNotEmpty),
-];
+//SPM and PT3 should ask berapa A kita dapat, tanya juga nasal jenis sijil SKM dan tahun bila data, kita juga boleh

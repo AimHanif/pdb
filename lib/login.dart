@@ -87,7 +87,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             height: 80.0,
                             width: 80.0,
                             errorBuilder: (context, error, stackTrace) {
-                              return Icon(
+                              return const Icon(
                                 Icons.star,
                                 color: AppColors.iconColor,
                                 size: 80.0,
@@ -138,12 +138,12 @@ class _AuthScreenState extends State<AuthScreen> {
                         Flexible(
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 30.0),
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: Colors.white,
-                              borderRadius: const BorderRadius.vertical(
+                              borderRadius: BorderRadius.vertical(
                                 top: Radius.circular(30.0),
                               ),
-                              boxShadow: const [
+                              boxShadow: [
                                 BoxShadow(
                                   color: Colors.black26,
                                   offset: Offset(0.0, -4.0),

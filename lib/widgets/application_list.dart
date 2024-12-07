@@ -1,7 +1,7 @@
 // widgets/application_list.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../colors.dart';
+import 'package:pdb/colors.dart';
 import 'application_card.dart';
 
 class ApplicationList extends StatelessWidget {
@@ -10,11 +10,11 @@ class ApplicationList extends StatelessWidget {
   final Function(int) onDelete;
 
   const ApplicationList({
-    Key? key,
+    super.key,
     required this.applications,
     required this.onEdit,
     required this.onDelete,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +41,7 @@ class ApplicationList extends StatelessWidget {
               onEdit: () => onEdit(index),
               onDelete: () => onDelete(index),
             );
-          }).toList(),
+          }),
         ],
       ),
     );

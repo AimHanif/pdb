@@ -9,11 +9,11 @@ class CustomNumericField extends StatelessWidget {
   final ValueChanged<String?> onChanged;
 
   const CustomNumericField({
-    Key? key,
+    super.key,
     required this.label,
     this.initialValue,
     required this.onChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -11,13 +11,13 @@ class CustomFileUploadButton extends StatelessWidget {
   final bool multiple;
 
   const CustomFileUploadButton({
-    Key? key,
+    super.key,
     required this.label,
     this.fileInfo,
     required this.onTap,
     required this.iconData,
     this.multiple = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +47,7 @@ class CustomFileUploadButton extends StatelessWidget {
                 style: GoogleFonts.poppins(fontSize: 14.0, color: AppColors.textSecondary),
               ),
             ),
-            Icon(Icons.upload_file, color: AppColors.textSecondary),
+            const Icon(Icons.upload_file, color: AppColors.textSecondary),
           ],
         ),
       ),

@@ -1,5 +1,4 @@
 // eInternship.dart
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
@@ -12,10 +11,10 @@ import '../navbar.dart';
 import '../widgets/custom_dropdown.dart';
 import '../widgets/custom_date_picker.dart';
 import '../widgets/custom_file_upload_button.dart';
-import '../widgets/custom_text_field.dart'; // If you have a custom text field
+// If you have a custom text field
 
 class EInternshipScreen extends StatefulWidget {
-  const EInternshipScreen({Key? key}) : super(key: key);
+  const EInternshipScreen({super.key});
 
   @override
   State<EInternshipScreen> createState() => _EInternshipScreenState();
@@ -71,8 +70,8 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
     final storedApps = eInternshipBox.get('applications', defaultValue: []);
     if (storedApps is List) {
       applications = storedApps
-          .where((app) => app is Map)
-          .map((app) => Map<String, dynamic>.from(app as Map))
+          .whereType<Map>()
+          .map((app) => Map<String, dynamic>.from(app))
           .toList();
     } else {
       applications = [];
@@ -89,7 +88,7 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
   void _submitApplication() {
     if (applications.length >= 3 && !isEditing) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('You have reached the maximum of 3 applications.')),
+        const SnackBar(content: Text('You have reached the maximum of 3 applications.')),
       );
       return;
     }
@@ -101,14 +100,14 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
         startDate == null ||
         endDate == null) { // Validate dates
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please fill in all required fields before submitting.')),
+        const SnackBar(content: Text('Please fill in all required fields before submitting.')),
       );
       return;
     }
 
     if (startDate!.isAfter(endDate!)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Start Date cannot be after End Date.')),
+        const SnackBar(content: Text('Start Date cannot be after End Date.')),
       );
       return;
     }
@@ -125,7 +124,7 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
 
     if (!isEditing && duplicate) {
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('You have already applied for this combination.'))
+          const SnackBar(content: Text('You have already applied for this combination.'))
       );
       return;
     }
@@ -149,7 +148,7 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
       final app = applications[editingIndex!];
       if (app['editCount'] >= 3) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('You cannot edit this application more than 3 times.')),
+          const SnackBar(content: Text('You cannot edit this application more than 3 times.')),
         );
         return;
       }
@@ -183,7 +182,7 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
   void _refreshStatus() {
     _loadApplications();
     ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('All statuses refreshed!'))
+        const SnackBar(content: Text('All statuses refreshed!'))
     );
     setState(() {});
   }
@@ -198,13 +197,13 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
     final app = applications[index];
     if (app['status'] != 'Pending') {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('You can only edit pending applications.')),
+        const SnackBar(content: Text('You can only edit pending applications.')),
       );
       return;
     }
     if (app['editCount'] >= 3) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('You cannot edit this application more than 3 times.')),
+        const SnackBar(content: Text('You cannot edit this application more than 3 times.')),
       );
       return;
     }
@@ -288,7 +287,7 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
   AppBar _buildAppBar() {
     return AppBar(
       leading: IconButton(
-        icon: Icon(Icons.arrow_back, color: Colors.white),
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
         onPressed: () async {
           // If editing/creating, revert to list, else pop
           if (isEditing || isCreating) {
@@ -302,7 +301,7 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
         },
       ),
       flexibleSpace: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [AppColors.primary, AppColors.accent],
             begin: Alignment.topLeft,
@@ -339,7 +338,7 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _startCreating,
-                    icon: Icon(Icons.add, size: 18.0), // Changed to Icon
+                    icon: const Icon(Icons.add, size: 18.0), // Changed to Icon
                     label: Text(
                       'Add Application',
                       style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
@@ -355,7 +354,7 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _refreshStatus,
-                    icon: Icon(Icons.refresh, size: 18.0), // Changed to Icon
+                    icon: const Icon(Icons.refresh, size: 18.0), // Changed to Icon
                     label: Text(
                       'Refresh Status',
                       style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
@@ -377,7 +376,7 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
 
   Widget _buildApplicationFormWidget() {
     return SingleChildScrollView(
-      key: ValueKey('formView'),
+      key: const ValueKey('formView'),
       padding: const EdgeInsets.all(16.0),
       child: Container(
         decoration: _whiteCardDecoration(),
@@ -386,7 +385,7 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              (isEditing ? 'Edit Your Internship' : 'Submit Your Internship Application') + ' 📝',
+              '${isEditing ? 'Edit Your Internship' : 'Submit Your Internship Application'} 📝',
               style: GoogleFonts.poppins(
                 fontSize: 20.0,
                 fontWeight: FontWeight.bold,
@@ -455,7 +454,7 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
             // Using CustomFileUploadButton for Resume
             CustomFileUploadButton(
               label: 'Upload Resume (Optional)',
-              fileInfo: resumePath != null ? resumePath!.split('/').last : null,
+              fileInfo: resumePath?.split('/').last,
               onTap: _pickResume,
               iconData: Icons.description_outlined,
               multiple: false,
@@ -499,7 +498,7 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
 
   Widget _buildApplicationsList() {
     return SingleChildScrollView(
-      key: ValueKey('listView'),
+      key: const ValueKey('listView'),
       padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0, bottom: 100.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -513,7 +512,7 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
             final index = entry.key;
             final app = entry.value;
             return _buildApplicationCard(app, index);
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -574,7 +573,7 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
 
   Widget _buildPopupMenu(int index) {
     return PopupMenuButton<String>(
-      icon: Icon(Icons.more_vert, color: AppColors.textSecondary),
+      icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
       onSelected: (value) {
         if (value == 'edit') {
@@ -588,7 +587,7 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
           value: 'edit',
           child: Row(
             children: [
-              Icon(Icons.edit, color: AppColors.primary),
+              const Icon(Icons.edit, color: AppColors.primary),
               const SizedBox(width: 8.0),
               Text('Edit', style: GoogleFonts.poppins(color: AppColors.textPrimary)),
             ],
@@ -598,7 +597,7 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
           value: 'delete',
           child: Row(
             children: [
-              Icon(Icons.delete, color: Colors.red),
+              const Icon(Icons.delete, color: Colors.red),
               const SizedBox(width: 8.0),
               Text('Delete', style: GoogleFonts.poppins(color: AppColors.textPrimary)),
             ],
@@ -608,24 +607,7 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
     );
   }
 
-  Widget _buildFileUploadButton(String label, String? fileInfo, VoidCallback onTap, IconData iconData) {
-    return CustomFileUploadButton(
-      label: label,
-      fileInfo: fileInfo,
-      onTap: onTap,
-      iconData: iconData,
-      multiple: false, // Set to true if uploading multiple files
-    );
-  }
 
-  Widget _buildDropdownField(String label, List<String> items, ValueChanged<String?> onChanged, String? currentValue) {
-    return CustomDropdown(
-      label: label,
-      items: items,
-      value: currentValue,
-      onChanged: onChanged,
-    );
-  }
 
   BoxDecoration _whiteCardDecoration() {
     return BoxDecoration(

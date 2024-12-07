@@ -8,10 +8,10 @@ class InfoRow extends StatelessWidget {
   final Widget valueWidget;
 
   const InfoRow({
-    Key? key,
+    super.key,
     required this.label,
     required this.valueWidget,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

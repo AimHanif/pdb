@@ -1,3 +1,5 @@
+// profile_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
@@ -6,7 +8,7 @@ import 'package:image_cropper/image_cropper.dart';
 import 'dart:io';
 import 'dart:async';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:intl/intl.dart';
+import 'package:pdb/widgets/resume_section.dart';
 
 import 'colors.dart';
 import 'navbar.dart';
@@ -38,7 +40,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   List<Map<String, String>> languagesList = [];
   List<Map<String, String>> sukanList = [];
   String pengalamanValue = '';
-  Map<String, bool> kesihatanMap = {'isHealthy': true}; // Placeholder
+  bool isHealthy = true; // Changed to bool for kesihatan
 
   @override
   void initState() {
@@ -62,27 +64,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _profileImage = File(imagePath);
     }
 
-    // Load resume data from Hive
+    // Load and validate skills list
     final storedSkills = profileBox.get('skillsList', defaultValue: []);
     if (storedSkills is List) {
-      skillsList = List<Map<String, String>>.from(storedSkills);
+      skillsList = storedSkills
+          .whereType<Map<dynamic, dynamic>>()
+          .map((e) => e.map((key, value) => MapEntry(key.toString(), value.toString())))
+          .toList();
     }
 
+    // Load and validate languages list
     final storedLanguages = profileBox.get('languagesList', defaultValue: []);
     if (storedLanguages is List) {
-      languagesList = List<Map<String, String>>.from(storedLanguages);
+      languagesList = storedLanguages
+          .whereType<Map<dynamic, dynamic>>()
+          .map((e) => e.map((key, value) => MapEntry(key.toString(), value.toString())))
+          .toList();
     }
 
+    // Load and validate sukan list
     final storedSukan = profileBox.get('sukanList', defaultValue: []);
     if (storedSukan is List) {
-      sukanList = List<Map<String, String>>.from(storedSukan);
+      sukanList = storedSukan
+          .whereType<Map<dynamic, dynamic>>()
+          .map((e) => e.map((key, value) => MapEntry(key.toString(), value.toString())))
+          .toList();
     }
 
     pengalamanValue = profileBox.get('pengalaman', defaultValue: '');
 
-    final storedKesihatan = profileBox.get('kesihatanMap', defaultValue: {});
-    if (storedKesihatan is Map) {
-      kesihatanMap = Map<String, bool>.from(storedKesihatan);
+    final storedKesihatan = profileBox.get('kesihatan', defaultValue: true);
+    if (storedKesihatan is bool) {
+      isHealthy = storedKesihatan;
     }
 
     setState(() {});
@@ -92,7 +105,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       isSaving = true;
     });
-
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () async {
       try {
@@ -125,33 +137,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  Future<void> _savePengalaman(String value) async {
-    setState(() {
-      isSaving = true;
-    });
 
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 500), () async {
-      try {
-        await profileBox.put('pengalaman', value);
-      } finally {
-        if (mounted) {
-          setState(() {
-            isSaving = false;
-          });
-        }
-      }
-    });
-  }
-
-  Future<void> _saveKesihatan(Map<String, bool> data) async {
+  Future<void> _saveKesihatan(String key, bool value) async {
     setState(() {
       isSaving = true;
     });
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () async {
       try {
-        await profileBox.put('kesihatanMap', data);
+        await profileBox.put(key, value);
       } finally {
         if (mounted) {
           setState(() {
@@ -223,13 +217,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Widget _buildPageIndicators() {
-    final List<String> pageTitles = [
-      'Personal Info',
-      'Family Info',
-      'Academics',
-      'Resume',
-    ];
+  // Builds the step indicators at the top
+  Widget _buildTopIndicators() {
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
@@ -247,113 +236,134 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
-      child: Column(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Arrows with labels
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Previous Page Button
-              if (_currentPageIndex > 0)
-                GestureDetector(
-                  onTap: () => _navigateToPage(_currentPageIndex - 1),
-                  child: Column(
-                    children: [
-                      ElevatedButton(
-                        onPressed: () => _navigateToPage(_currentPageIndex - 1),
-                        style: ElevatedButton.styleFrom(
-                          shape: const CircleBorder(),
-                          padding: const EdgeInsets.all(12.0),
-                          backgroundColor: _getArrowColor(_currentPageIndex - 1),
-                        ),
-                        child: const Icon(Icons.arrow_back, color: Colors.white),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        pageTitles[_currentPageIndex - 1],
-                        style: GoogleFonts.poppins(
-                          fontSize: 12.0,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              else
-                const SizedBox(width: 80),
+          GestureDetector(
+            onTap: () => _navigateToPage(0),
+            child: _buildStepIndicator(
+              isActive: _currentPageIndex == 0,
+              label: 'Info Peribadi',
+              activeColor: Colors.orange,
+            ),
+          ),
+          const SizedBox(width: 20),
+          GestureDetector(
+            onTap: () => _navigateToPage(1),
+            child: _buildStepIndicator(
+              isActive: _currentPageIndex == 1,
+              label: 'Info Keluarga',
+              activeColor: Colors.purple,
+            ),
+          ),
+          const SizedBox(width: 20),
+          GestureDetector(
+            onTap: () => _navigateToPage(2),
+            child: _buildStepIndicator(
+              isActive: _currentPageIndex == 2,
+              label: 'Akademik',
+              activeColor: Colors.blue,
+            ),
+          ),
+          const SizedBox(width: 20),
+          GestureDetector(
+            onTap: () => _navigateToPage(3),
+            child: _buildStepIndicator(
+              isActive: _currentPageIndex == 3,
+              label: 'Resume',
+              activeColor: Colors.red,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-              // Next Page Button
-              if (_currentPageIndex < pageTitles.length - 1)
-                GestureDetector(
-                  onTap: () => _navigateToPage(_currentPageIndex + 1),
-                  child: Column(
-                    children: [
-                      ElevatedButton(
-                        onPressed: () => _navigateToPage(_currentPageIndex + 1),
-                        style: ElevatedButton.styleFrom(
-                          shape: const CircleBorder(),
-                          padding: const EdgeInsets.all(12.0),
-                          backgroundColor: _getArrowColor(_currentPageIndex + 1),
-                        ),
-                        child: const Icon(Icons.arrow_forward, color: Colors.white),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        pageTitles[_currentPageIndex + 1],
-                        style: GoogleFonts.poppins(
-                          fontSize: 12.0,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
+  // Builds the navigation arrows at the bottom
+  Widget _buildBottomArrows() {
+    final List<String> pageTitles = [
+      'Info Peribadi',
+      'Info Keluarga',
+      'Akademik',
+      'Resume',
+    ];
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20.0),
+          topRight: Radius.circular(20.0),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10.0,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Previous Page Button
+          if (_currentPageIndex > 0)
+            GestureDetector(
+              onTap: () => _navigateToPage(_currentPageIndex - 1),
+              child: Column(
+                children: [
+                  ElevatedButton(
+                    onPressed: () => _navigateToPage(_currentPageIndex - 1),
+                    style: ElevatedButton.styleFrom(
+                      shape: const CircleBorder(),
+                      padding: const EdgeInsets.all(12.0),
+                      backgroundColor: _getArrowColor(_currentPageIndex - 1),
+                    ),
+                    child: const Icon(Icons.arrow_back, color: Colors.white),
                   ),
-                )
-              else
-                const SizedBox(width: 80),
-            ],
-          ),
-          const SizedBox(height: 16.0),
-          // Page indicators
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              GestureDetector(
-                onTap: () => _navigateToPage(0),
-                child: _buildStepIndicator(
-                  isActive: _currentPageIndex == 0,
-                  label: 'Personal Info',
-                  activeColor: Colors.orange,
-                ),
+                  const SizedBox(height: 4),
+                  Text(
+                    pageTitles[_currentPageIndex - 1],
+                    style: GoogleFonts.poppins(
+                      fontSize: 12.0,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 20),
-              GestureDetector(
-                onTap: () => _navigateToPage(1),
-                child: _buildStepIndicator(
-                  isActive: _currentPageIndex == 1,
-                  label: 'Family Info',
-                  activeColor: Colors.purple,
-                ),
+            )
+          else
+            const SizedBox(width: 80),
+
+          // Next Page Button
+          if (_currentPageIndex < pageTitles.length - 1)
+            GestureDetector(
+              onTap: () => _navigateToPage(_currentPageIndex + 1),
+              child: Column(
+                children: [
+                  ElevatedButton(
+                    onPressed: () => _navigateToPage(_currentPageIndex + 1),
+                    style: ElevatedButton.styleFrom(
+                      shape: const CircleBorder(),
+                      padding: const EdgeInsets.all(12.0),
+                      backgroundColor: _getArrowColor(_currentPageIndex + 1),
+                    ),
+                    child: const Icon(Icons.arrow_forward, color: Colors.white),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    pageTitles[_currentPageIndex + 1],
+                    style: GoogleFonts.poppins(
+                      fontSize: 12.0,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 20),
-              GestureDetector(
-                onTap: () => _navigateToPage(2),
-                child: _buildStepIndicator(
-                  isActive: _currentPageIndex == 2,
-                  label: 'Academics',
-                  activeColor: Colors.blue,
-                ),
-              ),
-              const SizedBox(width: 20),
-              GestureDetector(
-                onTap: () => _navigateToPage(3),
-                child: _buildStepIndicator(
-                  isActive: _currentPageIndex == 3,
-                  label: 'Resume',
-                  activeColor: Colors.red,
-                ),
-              ),
-            ],
-          ),
+            )
+          else
+            const SizedBox(width: 80),
         ],
       ),
     );
@@ -404,7 +414,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: AppColors.background,
         appBar: AppBar(
           title: Text(
-            'Profile',
+            'Profil',
             style: GoogleFonts.poppins(fontSize: 24.0, fontWeight: FontWeight.bold, color: Colors.white),
           ),
           centerTitle: true,
@@ -431,14 +441,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
       onSave: _saveData,
     );
 
-    // Instead of a simple ReusableProfileForm for resume, we now have a custom dynamic section.
-    final resumeSection = _buildResumeSection();
+    final resumeSection = ResumeSection(
+      skillsList: skillsList,
+      languagesList: languagesList,
+      sukanList: sukanList,
+      pengalamanList: pengalamanValue.isNotEmpty // Convert single value to list if needed
+          ? [{'experienceName': pengalamanValue, 'duration': ''}]
+          : [], // Adapt to your data structure
+      isHealthy: isHealthy,
+      onSaveSkills: (key, list) => _saveListData(key, list),
+      onSaveLanguages: (key, list) => _saveListData(key, list),
+      onSaveSukan: (key, list) => _saveListData(key, list),
+      onSavePengalaman: (key, list) => _saveListData(key, list),
+      onSaveKesihatan: (key, value) => _saveKesihatan(key, value),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         flexibleSpace: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [AppColors.primary, AppColors.accent],
               begin: Alignment.topLeft,
@@ -448,7 +470,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         elevation: 0,
         title: Text(
-          'Profile',
+          'Profil',
           style: GoogleFonts.poppins(
             fontSize: 24.0,
             fontWeight: FontWeight.bold,
@@ -461,7 +483,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Column(
             children: [
-              _buildPageIndicators(),
+              // Step Indicators at the top
+              _buildTopIndicators(),
               Expanded(
                 child: PageView(
                   controller: _pageController,
@@ -470,7 +493,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _buildSectionView(personalForm, _profileImage),
                     _buildSectionView(familyForm, null),
                     _buildSectionView(academicsForm, null),
-                    resumeSection,
+                    _buildResumeSectionView(resumeSection),
                   ],
                 ),
               ),
@@ -502,7 +525,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(width: 8.0),
                     Text(
-                      'Saving...',
+                      'Menyimpan...',
                       style: GoogleFonts.poppins(
                         color: Colors.white,
                         fontSize: 14.0,
@@ -516,13 +539,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: CustomBottomNavBar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
+      // Arrows are placed above the navbar at the bottom
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildBottomArrows(),
+          CustomBottomNavBar(
+            selectedIndex: _selectedIndex,
+            onItemTapped: (index) {
+              setState(() {
+                _selectedIndex = index;
+              });
+            },
+          ),
+        ],
       ),
     );
   }
@@ -532,7 +562,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          if (_currentPageIndex == 0) // Only show profile image in Personal Info section
+          if (_currentPageIndex == 0)
             Center(
               child: GestureDetector(
                 onTap: _pickImage,
@@ -585,278 +615,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildResumeSection() {
+  Widget _buildResumeSectionView(Widget resumeWidget) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
-      child: Container(
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 15.0,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Skills Section
-            Text("Skills", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            _buildDynamicList(
-              listData: skillsList,
-              onAdd: () {
-                setState(() {
-                  skillsList.add({'skillName': '', 'skillLevel': ''});
-                });
-                _saveListData('skillsList', skillsList);
-              },
-              onRemove: (index) {
-                setState(() {
-                  skillsList.removeAt(index);
-                });
-                _saveListData('skillsList', skillsList);
-              },
-              fieldsBuilder: (index) {
-                return Column(
-                  children: [
-                    TextFormField(
-                      initialValue: skillsList[index]['skillName'],
-                      decoration: const InputDecoration(labelText: 'Skill Name'),
-                      onChanged: (val) {
-                        skillsList[index]['skillName'] = val;
-                        _saveListData('skillsList', skillsList);
-                      },
-                    ),
-                    DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(labelText: 'Skill Level'),
-                      value: skillsList[index]['skillLevel']!.isEmpty ? null : skillsList[index]['skillLevel'],
-                      onChanged: (val) {
-                        if (val != null) {
-                          skillsList[index]['skillLevel'] = val;
-                          _saveListData('skillsList', skillsList);
-                        }
-                      },
-                      items: ['SANGAT MAHIR', 'MAHIR', 'KURANG MAHIR']
-                          .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                          .toList(),
-                    ),
-                  ],
-                );
-              },
-            ),
-
-            const SizedBox(height: 30),
-            // Languages Section
-            Text("Languages", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            _buildDynamicList(
-              listData: languagesList,
-              onAdd: () {
-                setState(() {
-                  languagesList.add({'languageName': '', 'languageLevel': ''});
-                });
-                _saveListData('languagesList', languagesList);
-              },
-              onRemove: (index) {
-                setState(() {
-                  languagesList.removeAt(index);
-                });
-                _saveListData('languagesList', languagesList);
-              },
-              fieldsBuilder: (index) {
-                return Column(
-                  children: [
-                    TextFormField(
-                      initialValue: languagesList[index]['languageName'],
-                      decoration: const InputDecoration(labelText: 'Language Name'),
-                      onChanged: (val) {
-                        languagesList[index]['languageName'] = val;
-                        _saveListData('languagesList', languagesList);
-                      },
-                    ),
-                    DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(labelText: 'Proficiency'),
-                      value: languagesList[index]['languageLevel']!.isEmpty ? null : languagesList[index]['languageLevel'],
-                      onChanged: (val) {
-                        if (val != null) {
-                          languagesList[index]['languageLevel'] = val;
-                          _saveListData('languagesList', languagesList);
-                        }
-                      },
-                      items: ['SANGAT FASIH', 'FASIH', 'KURANG FASIH']
-                          .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                          .toList(),
-                    ),
-                  ],
-                );
-              },
-            ),
-
-            const SizedBox(height: 30),
-            // Sukan Section
-            Text("Sukan", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            _buildDynamicList(
-              listData: sukanList,
-              onAdd: () {
-                setState(() {
-                  sukanList.add({'year': '', 'sportName': '', 'sportLevel': ''});
-                });
-                _saveListData('sukanList', sukanList);
-              },
-              onRemove: (index) {
-                setState(() {
-                  sukanList.removeAt(index);
-                });
-                _saveListData('sukanList', sukanList);
-              },
-              fieldsBuilder: (index) {
-                return Column(
-                  children: [
-                    TextFormField(
-                      initialValue: sukanList[index]['year'],
-                      decoration: const InputDecoration(labelText: 'Year'),
-                      keyboardType: TextInputType.number,
-                      onChanged: (val) {
-                        sukanList[index]['year'] = val;
-                        _saveListData('sukanList', sukanList);
-                      },
-                    ),
-                    TextFormField(
-                      initialValue: sukanList[index]['sportName'],
-                      decoration: const InputDecoration(labelText: 'Sports Name'),
-                      onChanged: (val) {
-                        sukanList[index]['sportName'] = val;
-                        _saveListData('sukanList', sukanList);
-                      },
-                    ),
-                    DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(labelText: 'Level'),
-                      value: sukanList[index]['sportLevel']!.isEmpty ? null : sukanList[index]['sportLevel'],
-                      onChanged: (val) {
-                        if (val != null) {
-                          sukanList[index]['sportLevel'] = val;
-                          _saveListData('sukanList', sukanList);
-                        }
-                      },
-                      items: ['Antarabangsa', 'Kebangsaan', 'Negeri', 'Daerah']
-                          .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                          .toList(),
-                    ),
-                  ],
-                );
-              },
-            ),
-
-            const SizedBox(height: 30),
-            // Pengalaman Section
-            Text("Pengalaman", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            DropdownButtonFormField<String>(
-              decoration: const InputDecoration(labelText: 'Tempoh Pengalaman'),
-              value: pengalamanValue.isEmpty ? null : pengalamanValue,
-              onChanged: (val) {
-                if (val != null) {
-                  setState(() {
-                    pengalamanValue = val;
-                  });
-                  _savePengalaman(pengalamanValue);
-                }
-              },
-              items: ['Kurang Setahun', 'Kurang Tiga Tahun', 'Lebih Tiga Tahun']
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                  .toList(),
-            ),
-
-            const SizedBox(height: 30),
-            // Kesihatan Section (Placeholder)
-            Text("Kesihatan", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            Text("Adakah anda sihat?", style: GoogleFonts.poppins(fontSize: 16)),
-            Row(
-              children: [
-                Radio<bool>(
-                  value: true,
-                  groupValue: kesihatanMap['isHealthy'],
-                  onChanged: (val) {
-                    if (val != null) {
-                      kesihatanMap['isHealthy'] = val;
-                      _saveKesihatan(kesihatanMap);
-                      setState(() {});
-                    }
-                  },
-                ),
-                const Text("Ya"),
-                Radio<bool>(
-                  value: false,
-                  groupValue: kesihatanMap['isHealthy'],
-                  onChanged: (val) {
-                    if (val != null) {
-                      kesihatanMap['isHealthy'] = val;
-                      _saveKesihatan(kesihatanMap);
-                      setState(() {});
-                    }
-                  },
-                ),
-                const Text("Tidak"),
-              ],
-            ),
-            // Additional Kesihatan logic or fields can be added here
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDynamicList({
-    required List<Map<String, String>> listData,
-    required Widget Function(int) fieldsBuilder,
-    required VoidCallback onAdd,
-    required Function(int) onRemove,
-  }) {
-    return Column(
-      children: [
-        for (int i = 0; i < listData.length; i++)
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 8.0),
-            padding: const EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12.0),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10.0,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                fieldsBuilder(i),
-                const SizedBox(height: 10),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: ElevatedButton(
-                    onPressed: () => onRemove(i),
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                    child: const Text("Remove"),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        const SizedBox(height: 10),
-        ElevatedButton(
-          onPressed: onAdd,
-          child: const Text("Add"),
-        ),
-      ],
+      child: resumeWidget,
     );
   }
 }

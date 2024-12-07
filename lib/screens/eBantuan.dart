@@ -1,5 +1,4 @@
 // screens/e_bantuan_screen.dart
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
@@ -11,12 +10,11 @@ import '../colors.dart';
 import '../widgets/custom_dropdown.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_file_upload_button.dart';
-import '../widgets/format_date.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/application_list.dart';
 
 class EBantuanScreen extends StatefulWidget {
-  const EBantuanScreen({Key? key}) : super(key: key);
+  const EBantuanScreen({super.key});
 
   @override
   State<EBantuanScreen> createState() => _EBantuanScreenState();
@@ -71,8 +69,8 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
     final storedApps = eBantuanBox.get('applications', defaultValue: []);
     if (storedApps is List) {
       applications = storedApps
-          .where((app) => app is Map)
-          .map((app) => Map<String, dynamic>.from(app as Map))
+          .whereType<Map>()
+          .map((app) => Map<String, dynamic>.from(app))
           .toList();
     } else {
       applications = [];
@@ -100,7 +98,7 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
         dependentsCount!.isEmpty ||
         assistanceReason!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sila lengkapkan semua maklumat yang diperlukan sebelum meneruskan.')),
+        const SnackBar(content: Text('Sila lengkapkan semua maklumat yang diperlukan sebelum meneruskan.')),
       );
       return;
     }
@@ -123,7 +121,7 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
       final app = applications[editingIndex!];
       if (app['status'] != 'Pending') {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('You can only edit pending applications.')),
+          const SnackBar(content: Text('You can only edit pending applications.')),
         );
         return;
       }
@@ -156,7 +154,7 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
   void _refreshStatus() {
     _loadApplications();
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('All statuses refreshed!')),
+      const SnackBar(content: Text('All statuses refreshed!')),
     );
     setState(() {});
   }
@@ -171,7 +169,7 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
     final app = applications[index];
     if (app['status'] != 'Pending') {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('You can only edit pending applications.')),
+        const SnackBar(content: Text('You can only edit pending applications.')),
       );
       return;
     }
@@ -256,7 +254,7 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _startCreating,
-                    icon: Icon(Icons.add, size: 18.0, color: AppColors.textPrimary),
+                    icon: const Icon(Icons.add, size: 18.0, color: AppColors.textPrimary),
                     label: Text(
                       'Add Application',
                       style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
@@ -272,7 +270,7 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _refreshStatus,
-                    icon: Icon(Icons.refresh, size: 18.0, color: AppColors.textPrimary),
+                    icon: const Icon(Icons.refresh, size: 18.0, color: AppColors.textPrimary),
                     label: Text(
                       'Refresh Status',
                       style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textPrimary),

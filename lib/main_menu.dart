@@ -37,7 +37,7 @@ class _MainMenuState extends State<MainMenu> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         flexibleSpace: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [AppColors.primary, AppColors.accent],
               begin: Alignment.topLeft,
@@ -325,8 +325,8 @@ class _HoverEffectButtonState extends State<HoverEffectButton> {
     final double fontSize = _isHovered ? 16.0 : 14.0;
 
     // Determine colors based on hover state
-    final iconColor = Colors.white;
-    final textColor = Colors.white;
+    const iconColor = Colors.white;
+    const textColor = Colors.white;
 
     // Icon and text widgets
     final iconWidget = Icon(
@@ -341,7 +341,7 @@ class _HoverEffectButtonState extends State<HoverEffectButton> {
         maxLines: 1,
         minFontSize: 10,
         maxFontSize: fontSize,
-        style: TextStyle(
+        style: const TextStyle(
           fontWeight: FontWeight.bold,
           color: textColor,
         ),

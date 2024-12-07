@@ -18,11 +18,11 @@ class CustomDatePicker extends StatefulWidget {
   final ValueChanged<DateTime?> onDateSelected;
 
   const CustomDatePicker({
-    Key? key,
+    super.key,
     required this.label,
     this.selectedDate,
     required this.onDateSelected,
-  }) : super(key: key);
+  });
 
   @override
   _CustomDatePickerState createState() => _CustomDatePickerState();
@@ -84,7 +84,7 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
             ),
             child: Row(
               children: [
-                Icon(Icons.calendar_today, color: AppColors.primary),
+                const Icon(Icons.calendar_today, color: AppColors.primary),
                 const SizedBox(width: 10.0),
                 Expanded(
                   child: Text(
@@ -92,7 +92,7 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
                     style: GoogleFonts.poppins(fontSize: 14.0, color: AppColors.textSecondary),
                   ),
                 ),
-                Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                const Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
               ],
             ),
           ),

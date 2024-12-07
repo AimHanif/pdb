@@ -2,23 +2,19 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import '../navbar.dart';
 import '../colors.dart';
 
 // Import the custom widgets
 import '../widgets/custom_dropdown.dart';
-import '../widgets/custom_text_field.dart';
 import '../widgets/custom_date_picker.dart';
 import '../widgets/custom_time_picker.dart'; // Newly added
-import '../widgets/custom_file_upload_button.dart';
-import '../widgets/format_date.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/booking_list.dart';
 
 class ETempahanScreen extends StatefulWidget {
-  const ETempahanScreen({Key? key}) : super(key: key);
+  const ETempahanScreen({super.key});
 
   @override
   State<ETempahanScreen> createState() => _ETempahanScreenState();
@@ -78,7 +74,7 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
     final storedBookings = eTempahanBox.get('bookings', defaultValue: []);
     if (storedBookings is List) {
       bookings = storedBookings
-          .where((booking) => booking is Map)
+          .whereType<Map>()
           .map((booking) => Map<String, dynamic>.from(booking as Map))
           .toList();
     } else {
@@ -93,7 +89,7 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
         bookings.map((booking) => Map<String, dynamic>.from(booking)).toList(),
       );
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Booking saved successfully!')),
+        const SnackBar(content: Text('Booking saved successfully!')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -116,7 +112,7 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
         selectedLokasi == null ||
         selectedLokasi!.isEmpty) { // Removed location checks
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sila lengkapkan semua maklumat yang diperlukan sebelum meneruskan.')),
+        const SnackBar(content: Text('Sila lengkapkan semua maklumat yang diperlukan sebelum meneruskan.')),
       );
       return;
     }
@@ -138,7 +134,7 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
       final booking = bookings[editingIndex!];
       if (booking['status'] != 'Pending') {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('You can only edit pending bookings.')),
+          const SnackBar(content: Text('You can only edit pending bookings.')),
         );
         return;
       }
@@ -155,7 +151,7 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Booking submitted successfully!')),
+      const SnackBar(content: Text('Booking submitted successfully!')),
     );
   }
 
@@ -173,7 +169,7 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
   void _refreshStatus() {
     _loadBookings();
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('All statuses refreshed!')),
+      const SnackBar(content: Text('All statuses refreshed!')),
     );
     setState(() {});
   }
@@ -188,7 +184,7 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
     final booking = bookings[index];
     if (booking['status'] != 'Pending') {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('You can only edit pending bookings.')),
+        const SnackBar(content: Text('You can only edit pending bookings.')),
       );
       return;
     }
@@ -297,7 +293,7 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _startCreating,
-                    icon: Icon(Icons.add, size: 18.0, color: AppColors.textPrimary),
+                    icon: const Icon(Icons.add, size: 18.0, color: AppColors.textPrimary),
                     label: Text(
                       'Add Booking',
                       style: GoogleFonts.poppins(
@@ -316,7 +312,7 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _refreshStatus,
-                    icon: Icon(Icons.refresh, size: 18.0, color: AppColors.textPrimary),
+                    icon: const Icon(Icons.refresh, size: 18.0, color: AppColors.textPrimary),
                     label: Text(
                       'Refresh Status',
                       style: GoogleFonts.poppins(
@@ -432,13 +428,6 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
     );
   }
 
-  Widget _buildBookingsList() {
-    return BookingList(
-      bookings: bookings,
-      onEdit: _editBooking,
-      onDelete: _deleteBooking,
-    );
-  }
 
   BoxDecoration _whiteCardDecoration() {
     return BoxDecoration(

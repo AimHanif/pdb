@@ -9,11 +9,11 @@ class CustomTimePicker extends StatelessWidget {
   final ValueChanged<TimeOfDay?> onTimeSelected;
 
   const CustomTimePicker({
-    Key? key,
+    super.key,
     required this.label,
     required this.selectedTime,
     required this.onTimeSelected,
-  }) : super(key: key);
+  });
 
   Future<void> _selectTime(BuildContext context) async {
     final TimeOfDay initialTime = selectedTime ?? TimeOfDay.now();
@@ -57,7 +57,7 @@ class CustomTimePicker extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.access_time, color: AppColors.primary),
+                const Icon(Icons.access_time, color: AppColors.primary),
                 const SizedBox(width: 10.0),
                 Expanded(
                   child: Text(
@@ -68,7 +68,7 @@ class CustomTimePicker extends StatelessWidget {
                     ),
                   ),
                 ),
-                Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                const Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
               ],
             ),
           ),

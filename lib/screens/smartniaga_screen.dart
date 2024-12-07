@@ -1,10 +1,8 @@
 // smart_niaga_screen.dart
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
-import 'package:file_picker/file_picker.dart';
 import '../navbar.dart';
 import '../colors.dart';
 
@@ -14,7 +12,7 @@ import '../widgets/custom_text_field.dart';
 import '../widgets/custom_multi_select_field.dart';
 
 class SmartNiagaScreen extends StatefulWidget {
-  const SmartNiagaScreen({Key? key}) : super(key: key);
+  const SmartNiagaScreen({super.key});
 
   @override
   State<SmartNiagaScreen> createState() => _SmartNiagaScreenState();
@@ -66,8 +64,8 @@ class _SmartNiagaScreenState extends State<SmartNiagaScreen> {
     final storedApps = smartNiagaBox.get('applications', defaultValue: []);
     if (storedApps is List) {
       applications = storedApps
-          .where((app) => app is Map)
-          .map((app) => Map<String, dynamic>.from(app as Map))
+          .whereType<Map>()
+          .map((app) => Map<String, dynamic>.from(app))
           .toList();
     } else {
       applications = [];
@@ -89,7 +87,7 @@ class _SmartNiagaScreenState extends State<SmartNiagaScreen> {
         companyName == null ||
         companyName!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sila lengkapkan semua maklumat yang diperlukan sebelum meneruskan.')),
+        const SnackBar(content: Text('Sila lengkapkan semua maklumat yang diperlukan sebelum meneruskan.')),
       );
       return;
     }
@@ -114,7 +112,7 @@ class _SmartNiagaScreenState extends State<SmartNiagaScreen> {
       final app = applications[editingIndex!];
       if (app['status'] != 'Pending') {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('You can only edit pending applications.')),
+          const SnackBar(content: Text('You can only edit pending applications.')),
         );
         return;
       }
@@ -149,7 +147,7 @@ class _SmartNiagaScreenState extends State<SmartNiagaScreen> {
   void _refreshStatus() {
     _loadApplications();
     ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('All statuses refreshed!'))
+        const SnackBar(content: Text('All statuses refreshed!'))
     );
     setState(() {});
   }
@@ -164,7 +162,7 @@ class _SmartNiagaScreenState extends State<SmartNiagaScreen> {
     final app = applications[index];
     if (app['status'] != 'Pending') {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('You can only edit pending applications.')),
+        const SnackBar(content: Text('You can only edit pending applications.')),
       );
       return;
     }
@@ -218,13 +216,13 @@ class _SmartNiagaScreenState extends State<SmartNiagaScreen> {
   AppBar _buildAppBar() {
     return AppBar(
       leading: IconButton(
-        icon: Icon(Icons.arrow_back, color: Colors.white),
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
         onPressed: () {
           Navigator.pop(context);
         },
       ),
       flexibleSpace: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [AppColors.primary, AppColors.accent],
             begin: Alignment.topLeft,
@@ -261,7 +259,7 @@ class _SmartNiagaScreenState extends State<SmartNiagaScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _startCreating,
-                    icon: Icon(Icons.add, size: 18.0),
+                    icon: const Icon(Icons.add, size: 18.0),
                     label: Text(
                       'Add Application',
                       style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
@@ -277,7 +275,7 @@ class _SmartNiagaScreenState extends State<SmartNiagaScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _refreshStatus,
-                    icon: Icon(Icons.refresh, size: 18.0),
+                    icon: const Icon(Icons.refresh, size: 18.0),
                     label: Text(
                       'Refresh Status',
                       style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
@@ -426,7 +424,7 @@ class _SmartNiagaScreenState extends State<SmartNiagaScreen> {
             final index = entry.key;
             final app = entry.value;
             return _buildApplicationCard(app, index);
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -466,7 +464,7 @@ class _SmartNiagaScreenState extends State<SmartNiagaScreen> {
           _buildInfoRow('No. Pendaftaran SSM', app['ssmNumber'] ?? '-'),
           _buildInfoRow('Nama Jenama', app['brandName'] ?? '-'),
           _buildInfoRow('URL Laman Web / Media Sosial', app['websiteUrl'] ?? '-'),
-          _buildInfoRow('Pemasaran (Platform Online)', (app['marketingPlatforms'] as List).join(', ') ?? '-'),
+          _buildInfoRow('Pemasaran (Platform Online)', (app['marketingPlatforms'] as List).join(', ')),
           _buildInfoRow('Application Date', _formatDate(app['applicationDate'])),
           _buildInfoRow('Last Update Date', _formatDate(app['latestUpdateDate'])),
           Row(
@@ -490,7 +488,7 @@ class _SmartNiagaScreenState extends State<SmartNiagaScreen> {
 
   Widget _buildPopupMenu(int index) {
     return PopupMenuButton<String>(
-      icon: Icon(Icons.more_vert, color: AppColors.textSecondary),
+      icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
       onSelected: (value) {
         if (value == 'edit') {
@@ -504,7 +502,7 @@ class _SmartNiagaScreenState extends State<SmartNiagaScreen> {
           value: 'edit',
           child: Row(
             children: [
-              Icon(Icons.edit, color: AppColors.primary),
+              const Icon(Icons.edit, color: AppColors.primary),
               const SizedBox(width: 8.0),
               Text('Edit', style: GoogleFonts.poppins(color: AppColors.textPrimary)),
             ],
@@ -514,7 +512,7 @@ class _SmartNiagaScreenState extends State<SmartNiagaScreen> {
           value: 'delete',
           child: Row(
             children: [
-              Icon(Icons.delete, color: Colors.red),
+              const Icon(Icons.delete, color: Colors.red),
               const SizedBox(width: 8.0),
               Text('Delete', style: GoogleFonts.poppins(color: AppColors.textPrimary)),
             ],
@@ -524,22 +522,7 @@ class _SmartNiagaScreenState extends State<SmartNiagaScreen> {
     );
   }
 
-  Widget _buildDropdownField(String label, List<String> items, ValueChanged<String?> onChanged, String? currentValue) {
-    return CustomDropdown(
-      label: label,
-      items: items,
-      value: currentValue,
-      onChanged: onChanged,
-    );
-  }
 
-  Widget _buildTextField(String label, ValueChanged<String?> onChanged, String? currentValue) {
-    return CustomTextField(
-      label: label,
-      initialValue: currentValue,
-      onChanged: onChanged,
-    );
-  }
 
   Widget _buildInfoRow(String label, String value) {
     return Padding(

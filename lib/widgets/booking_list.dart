@@ -1,8 +1,8 @@
 // widgets/booking_list.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:pdb/widgets/booking_card.dart';
 import '../colors.dart';
-import 'booking_card.dart';
 
 class BookingList extends StatelessWidget {
   final List<Map<String, dynamic>> bookings;
@@ -10,11 +10,11 @@ class BookingList extends StatelessWidget {
   final Function(int) onDelete;
 
   const BookingList({
-    Key? key,
+    super.key,
     required this.bookings,
     required this.onEdit,
     required this.onDelete,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

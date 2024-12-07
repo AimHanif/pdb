@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'info_row.dart';
-import 'format_date.dart';
 import 'reusable_popup_menu.dart';
 import '../colors.dart';
 
@@ -14,12 +13,12 @@ class ApplicationCard extends StatelessWidget {
   final VoidCallback onDelete;
 
   const ApplicationCard({
-    Key? key,
+    super.key,
     required this.application,
     required this.index,
     required this.onEdit,
     required this.onDelete,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

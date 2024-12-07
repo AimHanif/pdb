@@ -10,12 +10,12 @@ class CustomMultiSelectField extends StatelessWidget {
   final ValueChanged<List<String>> onSelectionChanged;
 
   const CustomMultiSelectField({
-    Key? key,
+    super.key,
     required this.label,
     required this.options,
     required this.selectedOptions,
     required this.onSelectionChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

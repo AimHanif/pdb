@@ -9,10 +9,10 @@ class FormatDate extends StatelessWidget {
   final String format;
 
   const FormatDate({
-    Key? key,
+    super.key,
     required this.date,
     this.format = 'yyyy-MM-dd',
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
