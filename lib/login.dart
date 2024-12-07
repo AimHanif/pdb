@@ -19,7 +19,7 @@ class _AuthScreenState extends State<AuthScreen> {
     });
   }
 
-  String get titleText => showLoginForm ? 'Welcome Back' : 'Create Account';
+  String get titleText => showLoginForm ? 'Selamat Datang' : 'Daftar Akaun';
   String get subtitleText => showLoginForm
       ? 'Log in to explore more!'
       : 'Join us for an amazing experience!';
@@ -29,16 +29,21 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Determine if the keyboard is open
+    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom != 0;
+
     return Scaffold(
+      // Ensures the screen resizes when the keyboard appears
+      resizeToAvoidBottomInset: true,
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        // Added a pinch of blue to the gradient
+        // Gradient background
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
               AppColors.primary,
-              AppColors.blueAccent.withOpacity(0.7), // Adding blue accent
+              AppColors.textPrimary.withOpacity(0.7), // Adding blue accent
               AppColors.accent
             ],
             begin: Alignment.topLeft,
@@ -46,139 +51,159 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
         ),
         child: SafeArea(
-          child: Column(
-            children: [
-              const SizedBox(height: 40.0),
-              // Logo with AnimatedSwitcher for subtle fade/slide
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 400),
-                transitionBuilder: (child, animation) {
-                  return FadeTransition(
-                    opacity: animation,
-                    child: SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(0.0, -0.1),
-                        end: Offset.zero,
-                      ).animate(animation),
-                      child: child,
-                    ),
-                  );
-                },
-                child: Image.asset(
-                  'assets/test.png', // Placeholder image path
-                  key: ValueKey(showLoginForm),
-                  height: 80.0,
-                  width: 80.0,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Icon(
-                      Icons.star,
-                      color: AppColors.iconColor,
-                      size: 80.0,
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 30.0),
-              // Title and subtitle with AnimatedSwitcher
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 400),
-                transitionBuilder: (child, animation) {
-                  return FadeTransition(
-                    opacity: animation,
-                    child: SlideTransition(
-                      position: Tween<Offset>(
-                        begin: Offset(showLoginForm ? -0.1 : 0.1, 0.0),
-                        end: Offset.zero,
-                      ).animate(animation),
-                      child: child,
-                    ),
-                  );
-                },
-                child: Column(
-                  key: ValueKey(titleText + subtitleText),
-                  children: [
-                    Text(
-                      titleText,
-                      style: GoogleFonts.poppins(
-                        color: AppColors.textPrimary,
-                        fontSize: 28.0,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10.0),
-                    Text(
-                      subtitleText,
-                      style: GoogleFonts.poppins(
-                        color: AppColors.textSecondary,
-                        fontSize: 16.0,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 40.0),
-              // White Container for forms
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 30.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(30.0),
-                    ),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black26,
-                        offset: Offset(0.0, -4.0),
-                        blurRadius: 15.0,
-                      ),
-                    ],
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                // Prevents scrolling if not needed
+                physics: isKeyboardOpen
+                    ? const AlwaysScrollableScrollPhysics()
+                    : const NeverScrollableScrollPhysics(),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight,
                   ),
-                  child: Column(
-                    children: [
-                      Expanded(
-                        // AnimatedSwitcher for forms
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 500),
+                  child: IntrinsicHeight(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 40.0),
+                        // Logo with AnimatedSwitcher for subtle fade/slide
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 400),
                           transitionBuilder: (child, animation) {
-                            return SlideTransition(
-                              position: Tween<Offset>(
-                                begin: Offset(showLoginForm ? 0.1 : -0.1, 0),
-                                end: Offset.zero,
-                              ).animate(
-                                CurvedAnimation(
-                                  parent: animation,
-                                  curve: Curves.easeInOut,
-                                ),
-                              ),
-                              child: FadeTransition(
-                                opacity: animation,
+                            return FadeTransition(
+                              opacity: animation,
+                              child: SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: const Offset(0.0, -0.1),
+                                  end: Offset.zero,
+                                ).animate(animation),
                                 child: child,
                               ),
                             );
                           },
-                          child: showLoginForm
-                              ? _buildLoginForm(key: const ValueKey('loginForm'))
-                              : _buildRegisterForm(key: const ValueKey('registerForm')),
-                        ),
-                      ),
-                      const SizedBox(height: 20.0),
-                      TextButton(
-                        onPressed: toggleForm,
-                        child: Text(
-                          toggleButtonText,
-                          style: GoogleFonts.poppins(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14.0,
+                          child: Image.asset(
+                            'assets/logo.png', // Placeholder image path
+                            key: ValueKey(showLoginForm),
+                            height: 80.0,
+                            width: 80.0,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Icon(
+                                Icons.star,
+                                color: AppColors.iconColor,
+                                size: 80.0,
+                              );
+                            },
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 30.0),
+                        // Title and subtitle with AnimatedSwitcher
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 400),
+                          transitionBuilder: (child, animation) {
+                            return FadeTransition(
+                              opacity: animation,
+                              child: SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: Offset(showLoginForm ? -0.1 : 0.1, 0.0),
+                                  end: Offset.zero,
+                                ).animate(animation),
+                                child: child,
+                              ),
+                            );
+                          },
+                          child: Column(
+                            key: ValueKey(titleText + subtitleText),
+                            children: [
+                              Text(
+                                titleText,
+                                style: GoogleFonts.poppins(
+                                  color: AppColors.cardBackground,
+                                  fontSize: 28.0,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 10.0),
+                              Text(
+                                subtitleText,
+                                style: GoogleFonts.poppins(
+                                  color: AppColors.cardBackground,
+                                  fontSize: 16.0,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 40.0),
+                        // Flexible instead of Expanded to allow flexibility when keyboard is open
+                        Flexible(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 30.0),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(30.0),
+                              ),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  offset: Offset(0.0, -4.0),
+                                  blurRadius: 15.0,
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              children: [
+                                Expanded(
+                                  // AnimatedSwitcher for forms
+                                  child: AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 500),
+                                    transitionBuilder: (child, animation) {
+                                      return SlideTransition(
+                                        position: Tween<Offset>(
+                                          begin: Offset(showLoginForm ? 0.1 : -0.1, 0),
+                                          end: Offset.zero,
+                                        ).animate(
+                                          CurvedAnimation(
+                                            parent: animation,
+                                            curve: Curves.easeInOut,
+                                          ),
+                                        ),
+                                        child: FadeTransition(
+                                          opacity: animation,
+                                          child: child,
+                                        ),
+                                      );
+                                    },
+                                    child: showLoginForm
+                                        ? _buildLoginForm(key: const ValueKey('loginForm'))
+                                        : _buildRegisterForm(key: const ValueKey('registerForm')),
+                                  ),
+                                ),
+                                const SizedBox(height: 20.0),
+                                TextButton(
+                                  onPressed: toggleForm,
+                                  child: Text(
+                                    toggleButtonText,
+                                    style: GoogleFonts.poppins(
+                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14.0,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        // Add some spacing at the bottom when keyboard is open
+                        if (isKeyboardOpen)
+                          SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),
@@ -193,6 +218,7 @@ class _AuthScreenState extends State<AuthScreen> {
           _buildTextField(
             icon: Icons.email_outlined,
             hint: 'Email',
+            keyboardType: TextInputType.emailAddress,
           ),
           const SizedBox(height: 20.0),
           _buildTextField(
@@ -244,6 +270,7 @@ class _AuthScreenState extends State<AuthScreen> {
           _buildTextField(
             icon: Icons.email_outlined,
             hint: 'Email',
+            keyboardType: TextInputType.emailAddress,
           ),
           const SizedBox(height: 20.0),
           _buildTextField(
@@ -273,8 +300,10 @@ class _AuthScreenState extends State<AuthScreen> {
     required IconData icon,
     required String hint,
     bool obscureText = false,
+    TextInputType keyboardType = TextInputType.text,
   }) {
     return TextField(
+      keyboardType: keyboardType,
       decoration: InputDecoration(
         prefixIcon: Icon(icon, color: AppColors.primary),
         hintText: hint,
