@@ -1,8 +1,4 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:carousel_slider/carousel_slider.dart';
-import 'package:auto_size_text/auto_size_text.dart'; // Importing auto_size_text package for text resizing
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pdb/profile_screen.dart';
 import 'colors.dart';
@@ -105,26 +101,14 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
     _loadProfileData();
   }
 
-  String _generateRandomId() {
-    // Simple random ID based on current time and a random number
-    final rand = Random().nextInt(999999);
-    return 'ID${DateTime.now().millisecondsSinceEpoch}$rand';
-  }
-
-  void _loadProfileData() {
-    profileBox = Hive.box('profileData');
+  void _loadProfileData() async {
+    profileBox = await Hive.openBox('profileData');
 
     // Full Name
     fullName = profileBox.get('fullName', defaultValue: 'Pengguna');
 
-    // ID Pengguna: If not available, generate and save a random ID
-    if (!profileBox.containsKey('idNumber')) {
-      String newId = _generateRandomId();
-      profileBox.put('idNumber', newId);
-      idNumber = newId;
-    } else {
-      idNumber = profileBox.get('idNumber', defaultValue: 'N/A');
-    }
+    // Load ID Pengguna directly from the profile box (not generated randomly)
+    idNumber = profileBox.get('idNumber', defaultValue: 'N/A');
 
     // Log Masuk Terakhir: Show old login time and then update to current
     String oldLogin = profileBox.get('lastLogin', defaultValue: 'Unknown');
@@ -291,7 +275,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                       ),
                     ),
                     subtitle: Text(
-                      'Saya akui bahawa keterangan yang saya beri adalah benar. Saya memahami bahawa sekiranya maklumat itu didapati palsu, permohonan saya akan terbatal dan jika saya telah ditawarkan jawatan, perkhidmatan saya akan ditamatkan.',
+                      'Saya akui bahawa keterangan yang saya beri adalah benar.',
                       style: GoogleFonts.poppins(
                         fontSize: 12.0,
                         color: AppColors.textSecondary.withOpacity(0.8),
@@ -299,45 +283,15 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                     ),
                     value: _isAcknowledged,
                     onChanged: (value) {
-                      if (value != null && !_isAcknowledged) {
+                      if (value != null) {
                         _saveAcknowledgment(value);
-                        profileBox.put('verifiedAt', DateTime.now().toString());
-                      }
-                      if (value != null && !_isAcknowledged) {
-                        _saveAcknowledgment(value);
+                        if (!_isAcknowledged) {
+                          profileBox.put('verifiedAt', DateTime.now().toString());
+                        }
                       }
                     },
                     activeColor: AppColors.primary,
                     checkColor: Colors.white,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 30.0),
-          // Warning Notice Section - Bold and Attention-grabbing
-          Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16.0),
-            ),
-            color: Colors.red.shade50,
-            elevation: 3,
-            shadowColor: Colors.black.withOpacity(0.1),
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Row(
-                children: [
-                  Icon(Icons.warning, color: Colors.red.shade700, size: 40),
-                  const SizedBox(width: 16.0),
-                  Expanded(
-                    child: Text(
-                      'PERINGATAN: Sila lengkapi Maklumat Peribadi terlebih dahulu sebelum memohon sebarang jawatan kosong. Kemaskini Maklumat Peribadi',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.red.shade700,
-                      ),
-                    ),
                   ),
                 ],
               ),

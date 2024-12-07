@@ -1,11 +1,18 @@
+// eInternship.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
-import 'colors.dart';
-import 'navbar.dart';
+import '../colors.dart';
+import '../navbar.dart';
+
+// Import the custom widgets
+import '../widgets/custom_dropdown.dart';
+import '../widgets/custom_date_picker.dart';
+import '../widgets/custom_file_upload_button.dart';
+import '../widgets/custom_text_field.dart'; // If you have a custom text field
 
 class EInternshipScreen extends StatefulWidget {
   const EInternshipScreen({Key? key}) : super(key: key);
@@ -62,11 +69,21 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
 
   void _loadApplications() {
     final storedApps = eInternshipBox.get('applications', defaultValue: []);
-    applications = List<Map<String, dynamic>>.from(storedApps);
+    if (storedApps is List) {
+      applications = storedApps
+          .where((app) => app is Map)
+          .map((app) => Map<String, dynamic>.from(app as Map))
+          .toList();
+    } else {
+      applications = [];
+    }
   }
 
   void _saveApplications() {
-    eInternshipBox.put('applications', applications);
+    eInternshipBox.put(
+      'applications',
+      applications.map((app) => Map<String, dynamic>.from(app)).toList(),
+    );
   }
 
   void _submitApplication() {
@@ -195,8 +212,8 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
     selectedCompany = app['company'];
     selectedDepartment = app['department'];
     selectedSupervisor = app['supervisor']; // Set supervisor
-    startDate = DateTime.parse(app['startDate'].toString());
-    endDate = DateTime.parse(app['endDate'].toString());
+    startDate = app['startDate'] as DateTime;
+    endDate = app['endDate'] as DateTime;
     resumePath = app['resumePath'];
     supportingDocs = List<String>.from(app['supportingDocs']);
     isEditing = true;
@@ -225,34 +242,6 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
     if (result != null) {
       supportingDocs.addAll(result.files.map((f) => f.path!).toList());
       setState(() {});
-    }
-  }
-
-  Future<void> _pickStartDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: startDate ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (picked != null && picked != startDate) {
-      setState(() {
-        startDate = picked;
-      });
-    }
-  }
-
-  Future<void> _pickEndDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: endDate ?? (startDate ?? DateTime.now()),
-      firstDate: startDate ?? DateTime.now(),
-      lastDate: DateTime(2100),
-    );
-    if (picked != null && picked != endDate) {
-      setState(() {
-        endDate = picked;
-      });
     }
   }
 
@@ -353,7 +342,7 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
                     icon: Icon(Icons.add, size: 18.0), // Changed to Icon
                     label: Text(
                       'Add Application',
-                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
@@ -369,7 +358,7 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
                     icon: Icon(Icons.refresh, size: 18.0), // Changed to Icon
                     label: Text(
                       'Refresh Status',
-                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
@@ -405,79 +394,83 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
               ),
             ),
             const SizedBox(height: 16.0),
-            _buildDropdownField('Position 💼', positions, (val) => selectedPosition = val, selectedPosition),
-            const SizedBox(height: 16.0),
-            _buildDropdownField('Agency / Department 🏢', companies, (val) => selectedCompany = val, selectedCompany),
-            const SizedBox(height: 16.0),
-            _buildDropdownField('Department 🗂', departments, (val) => selectedDepartment = val, selectedDepartment),
-            const SizedBox(height: 16.0),
-            _buildDropdownField('Supervisor 👨‍🏫', supervisors, (val) => selectedSupervisor = val, selectedSupervisor), // New field
-            const SizedBox(height: 16.0),
-            // Start and End Date in one row
-            Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: _pickStartDate,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 12.0),
-                      decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(12.0),
-                        border: Border.all(color: AppColors.primary.withOpacity(0.4), width: 1.5),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Start Date 📅',
-                            style: GoogleFonts.poppins(fontSize: 14.0, color: AppColors.textSecondary),
-                          ),
-                          const SizedBox(height: 4.0),
-                          Text(
-                            startDate == null ? 'Start Date' : _formatDate(startDate!),
-                            style: GoogleFonts.poppins(fontSize: 16.0, color: AppColors.textPrimary),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16.0),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: _pickEndDate,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 12.0),
-                      decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(12.0),
-                        border: Border.all(color: AppColors.primary.withOpacity(0.4), width: 1.5),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'End Date 📅',
-                            style: GoogleFonts.poppins(fontSize: 14.0, color: AppColors.textSecondary),
-                          ),
-                          const SizedBox(height: 4.0),
-                          Text(
-                            endDate == null ? 'End Date' : _formatDate(endDate!),
-                            style: GoogleFonts.poppins(fontSize: 16.0, color: AppColors.textPrimary),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            // Using CustomDropdown for Position
+            CustomDropdown(
+              label: 'Position 💼',
+              items: positions,
+              value: selectedPosition,
+              onChanged: (val) => setState(() {
+                selectedPosition = val;
+              }),
             ),
             const SizedBox(height: 16.0),
-            _buildFileUploadButton('Upload Resume (Optional)', resumePath, _pickResume, Icons.description_outlined),
+            // Using CustomDropdown for Company/Agency
+            CustomDropdown(
+              label: 'Agency / Department 🏢',
+              items: companies,
+              value: selectedCompany,
+              onChanged: (val) => setState(() {
+                selectedCompany = val;
+              }),
+            ),
             const SizedBox(height: 16.0),
-            _buildFileUploadButton('Upload Supporting Docs (Optional)', supportingDocs.isEmpty ? null : '${supportingDocs.length} files', _pickSupportingDocuments, Icons.attach_file),
+            // Using CustomDropdown for Department
+            CustomDropdown(
+              label: 'Department 🗂',
+              items: departments,
+              value: selectedDepartment,
+              onChanged: (val) => setState(() {
+                selectedDepartment = val;
+              }),
+            ),
+            const SizedBox(height: 16.0),
+            // Using CustomDropdown for Supervisor
+            CustomDropdown(
+              label: 'Supervisor 👨‍🏫',
+              items: supervisors,
+              value: selectedSupervisor,
+              onChanged: (val) => setState(() {
+                selectedSupervisor = val;
+              }),
+            ),
+            const SizedBox(height: 16.0),
+            // Using CustomDatePicker for Start Date
+            CustomDatePicker(
+              label: 'Start Date 📅',
+              selectedDate: startDate,
+              onDateSelected: (date) => setState(() {
+                startDate = date;
+              }),
+            ),
+            const SizedBox(height: 16.0),
+            // Using CustomDatePicker for End Date
+            CustomDatePicker(
+              label: 'End Date 📅',
+              selectedDate: endDate,
+              onDateSelected: (date) => setState(() {
+                endDate = date;
+              }),
+            ),
+            const SizedBox(height: 16.0),
+            // Using CustomFileUploadButton for Resume
+            CustomFileUploadButton(
+              label: 'Upload Resume (Optional)',
+              fileInfo: resumePath != null ? resumePath!.split('/').last : null,
+              onTap: _pickResume,
+              iconData: Icons.description_outlined,
+              multiple: false,
+            ),
+            const SizedBox(height: 16.0),
+            // Using CustomFileUploadButton for Supporting Docs
+            CustomFileUploadButton(
+              label: 'Upload Supporting Docs (Optional)',
+              fileInfo: supportingDocs.isEmpty ? null : '${supportingDocs.length} files',
+              onTap: _pickSupportingDocuments,
+              iconData: Icons.attach_file,
+              multiple: true,
+            ),
             const SizedBox(height: 24.0),
+            // Submit Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -555,10 +548,10 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
           _buildInfoRow('Company/Agency/Dept.', app['company']),
           _buildInfoRow('Department', app['department']),
           _buildInfoRow('Supervisor', app['supervisor']), // Display supervisor
-          _buildInfoRow('Start Date', _formatDate(DateTime.parse(app['startDate'].toString()))),
-          _buildInfoRow('End Date', _formatDate(DateTime.parse(app['endDate'].toString()))),
-          _buildInfoRow('Application Date', _formatDate(DateTime.parse(app['applicationDate'].toString()))),
-          _buildInfoRow('Last Update Date', _formatDate(DateTime.parse(app['latestUpdateDate'].toString()))),
+          _buildInfoRow('Start Date', _formatDate(app['startDate'])),
+          _buildInfoRow('End Date', _formatDate(app['endDate'])),
+          _buildInfoRow('Application Date', _formatDate(app['applicationDate'])),
+          _buildInfoRow('Last Update Date', _formatDate(app['latestUpdateDate'])),
           Row(
             children: [
               Text('Status: ', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: AppColors.primary)),
@@ -616,65 +609,21 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
   }
 
   Widget _buildFileUploadButton(String label, String? fileInfo, VoidCallback onTap, IconData iconData) {
-    return InkWell(
+    return CustomFileUploadButton(
+      label: label,
+      fileInfo: fileInfo,
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12.0),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 16.0),
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(12.0),
-          border: Border.all(color: AppColors.primary.withOpacity(0.4), width: 1.5),
-        ),
-        child: Row(
-          children: [
-            Icon(iconData, color: AppColors.primary),
-            const SizedBox(width: 10.0),
-            Expanded(
-              child: Text(
-                fileInfo == null ? label : '$label: $fileInfo',
-                style: GoogleFonts.poppins(fontSize: 14.0, color: AppColors.textSecondary),
-              ),
-            ),
-            Icon(Icons.upload_file, color: AppColors.textSecondary),
-          ],
-        ),
-      ),
+      iconData: iconData,
+      multiple: false, // Set to true if uploading multiple files
     );
   }
 
   Widget _buildDropdownField(String label, List<String> items, ValueChanged<String?> onChanged, String? currentValue) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.poppins(fontSize: 16.0, fontWeight: FontWeight.w600, color: AppColors.primary),
-        ),
-        const SizedBox(height: 8.0),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.background,
-            borderRadius: BorderRadius.circular(12.0),
-            border: Border.all(
-              color: AppColors.primary.withOpacity(0.4),
-              width: 1.5,
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 12.0),
-          child: DropdownButtonFormField<String>(
-            value: currentValue,
-            decoration: const InputDecoration(border: InputBorder.none),
-            style: GoogleFonts.poppins(fontSize: 16.0, color: AppColors.textPrimary),
-            hint: Text(
-              'Select $label',
-              style: GoogleFonts.poppins(fontSize: 14.0, color: AppColors.textSecondary.withOpacity(0.8)),
-            ),
-            items: items.map((item) => DropdownMenuItem<String>(value: item, child: Text(item))).toList(),
-            onChanged: onChanged,
-          ),
-        ),
-      ],
+    return CustomDropdown(
+      label: label,
+      items: items,
+      value: currentValue,
+      onChanged: onChanged,
     );
   }
 

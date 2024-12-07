@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'colors.dart';
+import '../colors.dart';
 
 class AdminEPerjawatanScreen extends StatefulWidget {
   const AdminEPerjawatanScreen({Key? key}) : super(key: key);

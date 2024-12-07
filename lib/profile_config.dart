@@ -70,7 +70,6 @@ List<FieldDefinition> personalFields = [
   FieldDefinition(key: 'idNumber', label: 'No. Kad Pengenalan', type: FieldType.text, validator: validateIDNumber),
   FieldDefinition(key: 'phoneNumber', label: 'No. Telefon Bimbit', type: FieldType.text, validator: validatePhoneNumber),
   FieldDefinition(key: 'email', label: 'Alamat E-Mel', type: FieldType.text, validator: validateEmail),
-  // Tarikh Lahir: date-time picker
   FieldDefinition(key: 'birthDate', label: 'Tarikh Lahir', type: FieldType.date, validator: validateNotEmpty),
   FieldDefinition(key: 'age', label: 'Umur', type: FieldType.number, validator: validateAge),
   FieldDefinition(key: 'birthPlace', label: 'Tempat Lahir', type: FieldType.text, validator: validateNotEmpty),
@@ -81,7 +80,13 @@ List<FieldDefinition> personalFields = [
     options: ['LELAKI', 'PEREMPUAN'],
     validator: validateGender,
   ),
-  FieldDefinition(key: 'status', label: 'Status Diri', type: FieldType.text, validator: validateNotEmpty),
+  FieldDefinition(
+    key: 'status',
+    label: 'Status Diri',
+    type: FieldType.dropdown,
+    options: ['Bujang', 'Berkahwin', 'Janda', 'Duda'],
+    validator: validateNotEmpty,
+  ),
 ];
 
 // Family Fields
@@ -114,9 +119,50 @@ List<FieldDefinition> academicsFields = [
   FieldDefinition(key: 'higherEducationCGPA', label: 'CGPA (HE)', type: FieldType.number, validator: validateNotEmpty),
 ];
 
-// Skills Fields
-List<FieldDefinition> skillsFields = [
-  FieldDefinition(key: 'skillName', label: 'Nama Kemahiran', type: FieldType.text, validator: validateNotEmpty),
-  FieldDefinition(key: 'skillLevel', label: 'Tahap Kemahiran', type: FieldType.text, validator: validateNotEmpty),
-  // Add more skill-related fields as needed
+// Resume Fields (Previously Skills Fields)
+// We now combine Skills, Languages, Sukan, Pengalaman, and Kesihatan placeholders here:
+List<FieldDefinition> resumeFields = [
+  // SKILLS
+  FieldDefinition(key: 'skillName', label: 'Nama Kemahiran (Contoh: Memasak)', type: FieldType.text, validator: validateNotEmpty),
+  FieldDefinition(
+    key: 'skillLevel',
+    label: 'Tahap Kemahiran',
+    type: FieldType.dropdown,
+    options: ['SANGAT MAHIR', 'MAHIR', 'KURANG MAHIR'],
+    validator: validateNotEmpty,
+  ),
+
+  // LANGUAGES
+  FieldDefinition(key: 'languageName', label: 'Nama Bahasa (Contoh: Bahasa Melayu)', type: FieldType.text, validator: validateNotEmpty),
+  FieldDefinition(
+    key: 'languageLevel',
+    label: 'Tahap Fasih Bahasa',
+    type: FieldType.dropdown,
+    options: ['SANGAT FASIH', 'FASIH', 'KURANG FASIH'],
+    validator: validateNotEmpty,
+  ),
+
+  // SUKAN
+  FieldDefinition(key: 'sukanYear', label: 'Tahun Penyertaan Sukan', type: FieldType.number, validator: validateNotEmpty),
+  FieldDefinition(key: 'sukanName', label: 'Nama Sukan', type: FieldType.text, validator: validateNotEmpty),
+  FieldDefinition(
+    key: 'sukanLevel',
+    label: 'Tahap Penyertaan Sukan',
+    type: FieldType.dropdown,
+    options: ['Antarabangsa', 'Kebangsaan', 'Negeri', 'Daerah'],
+    validator: validateNotEmpty,
+  ),
+
+  // PENGALAMAN
+  FieldDefinition(
+    key: 'pengalamanDuration',
+    label: 'Tempoh Pengalaman',
+    type: FieldType.dropdown,
+    options: ['Kurang Setahun', 'Kurang Tiga Tahun', 'Lebih Tiga Tahun'],
+    validator: validateNotEmpty,
+  ),
+
+  // KESIHATAN (Placeholder)
+  // You mentioned you will do Kesihatan yourself, so we'll just put a placeholder text field:
+  FieldDefinition(key: 'kesihatanInfo', label: 'Info Kesihatan (Placeholder)', type: FieldType.text, validator: validateNotEmpty),
 ];

@@ -1,42 +1,43 @@
+// e_perjawatan_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
-import 'navbar.dart';
-import 'colors.dart';
+import '../colors.dart';
+import '../navbar.dart';
 
-class EBantuanScreen extends StatefulWidget {
-  const EBantuanScreen({Key? key}) : super(key: key);
+// Import the custom widgets
+import '../widgets/custom_text_field.dart';
+import '../widgets/custom_dropdown.dart';
+import '../widgets/custom_file_upload_button.dart';
+// If you have CustomDatePicker and CustomNumericField, import them as well
+
+class EPerjawatanScreen extends StatefulWidget {
+  const EPerjawatanScreen({Key? key}) : super(key: key);
 
   @override
-  State<EBantuanScreen> createState() => _EBantuanScreenState();
+  State<EPerjawatanScreen> createState() => _EPerjawatanScreenState();
 }
 
-class _EBantuanScreenState extends State<EBantuanScreen> {
+class _EPerjawatanScreenState extends State<EPerjawatanScreen> {
   int _selectedIndex = 0;
-  late Box eBantuanBox;
+  late Box ePerjawatanBox;
   bool isBoxReady = false;
 
   List<Map<String, dynamic>> applications = [];
 
-  String? applicantName; // Nama Pemohon
-  String? applicantIC; // Nombor Kad Pengenalan
-  String? assistanceType; // Jenis Bantuan
-  String? householdIncome; // Pendapatan Isi Rumah
-  String? dependentsCount; // Bilangan Tanggungan
-  String? employmentStatus; // Status Pekerjaan
-  String? assistanceReason; // Sebab Permohonan
-  String? documentsPath; // Dokumen Sokongan
+  final List<String> positions = ['Manager', 'Officer', 'Clerk', 'Intern'];
+  final List<String> companies = ['Company A', 'Agency B', 'Department C'];
+  final List<String> departments = ['HR', 'Finance', 'IT', 'Admin'];
 
-  final List<String> assistanceOptions = [
-    'Bantuan Kewangan',
-    'Bantuan Makanan',
-    'Bantuan Pendidikan',
-    'Bantuan Kesihatan'
-  ];
-  final List<String> employmentOptions = ['Bekerja', 'Menganggur', 'Berniaga Sendiri'];
+  String? selectedPosition;
+  String? selectedCompany;
+  String? selectedDepartment;
+
+  String? resumePath;
+  List<String> supportingDocs = [];
 
   bool isEditing = false;
   bool isCreating = false;
@@ -49,10 +50,10 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
   }
 
   Future<void> _initHiveData() async {
-    if (!Hive.isBoxOpen('eBantuanData')) {
-      await Hive.openBox('eBantuanData');
+    if (!Hive.isBoxOpen('ePerjawatanData')) {
+      await Hive.openBox('ePerjawatanData');
     }
-    eBantuanBox = Hive.box('eBantuanData');
+    ePerjawatanBox = Hive.box('ePerjawatanData');
     _loadApplications();
     setState(() {
       isBoxReady = true;
@@ -60,51 +61,77 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
   }
 
   void _loadApplications() {
-    final storedApps = eBantuanBox.get('applications', defaultValue: []);
-    applications = List<Map<String, dynamic>>.from(storedApps);
+    final storedApps = ePerjawatanBox.get('applications', defaultValue: []);
+    if (storedApps is List) {
+      applications = storedApps
+          .where((app) => app is Map) // Ensure only maps are processed
+          .map((app) => Map<String, dynamic>.from(app as Map)) // Cast to Map<String, dynamic>
+          .toList();
+    } else {
+      applications = [];
+    }
   }
 
   void _saveApplications() {
-    eBantuanBox.put('applications', applications);
+    ePerjawatanBox.put(
+      'applications',
+      applications.map((app) => Map<String, dynamic>.from(app)).toList(),
+    );
   }
 
   void _submitApplication() {
-    if (applicantName == null ||
-        applicantIC == null ||
-        assistanceType == null ||
-        householdIncome == null ||
-        dependentsCount == null ||
-        employmentStatus == null ||
-        assistanceReason == null ||
-        applicantName!.isEmpty ||
-        applicantIC!.isEmpty ||
-        householdIncome!.isEmpty ||
-        dependentsCount!.isEmpty ||
-        assistanceReason!.isEmpty) {
+    if (applications.length >= 3 && !isEditing) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sila lengkapkan semua maklumat yang diperlukan sebelum meneruskan.')),
+        SnackBar(content: Text('You have reached the maximum of 3 applications.')),
       );
       return;
     }
 
-    final newApplication = {
-      'applicantName': applicantName,
-      'applicantIC': applicantIC,
-      'assistanceType': assistanceType,
-      'householdIncome': householdIncome,
-      'dependentsCount': dependentsCount,
-      'employmentStatus': employmentStatus,
-      'assistanceReason': assistanceReason,
-      'documentsPath': documentsPath,
+    if (selectedPosition == null || selectedCompany == null || selectedDepartment == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please select Position, Company/Agency, and Department before submitting.')),
+      );
+      return;
+    }
+
+    // Check for duplicates
+    bool duplicate = applications.any((app) =>
+    app['position'] == selectedPosition &&
+        app['company'] == selectedCompany &&
+        app['department'] == selectedDepartment
+    );
+
+    if (!isEditing && duplicate) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('You have already applied for this combination.'))
+      );
+      return;
+    }
+
+    final newApp = {
+      'position': selectedPosition!,
+      'company': selectedCompany!,
+      'department': selectedDepartment!,
       'status': 'Pending',
       'applicationDate': DateTime.now(),
       'latestUpdateDate': DateTime.now(),
+      'resumePath': resumePath,
+      'supportingDocs': supportingDocs,
+      'editCount': isEditing ? applications[editingIndex!]['editCount'] : 0,
     };
 
     if (isEditing && editingIndex != null) {
-      applications[editingIndex!] = newApplication;
+      final app = applications[editingIndex!];
+      if (app['editCount'] >= 3) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('You cannot edit this application more than 3 times.')),
+        );
+        return;
+      }
+      newApp['editCount'] = app['editCount'] + 1;
+      applications[editingIndex!] = newApp;
     } else {
-      applications.add(newApplication);
+      applications.add(newApp);
     }
 
     _saveApplications();
@@ -116,14 +143,11 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
   }
 
   void _resetForm() {
-    applicantName = null;
-    applicantIC = null;
-    assistanceType = null;
-    householdIncome = null;
-    dependentsCount = null;
-    employmentStatus = null;
-    assistanceReason = null;
-    documentsPath = null;
+    selectedPosition = null;
+    selectedCompany = null;
+    selectedDepartment = null;
+    resumePath = null;
+    supportingDocs = [];
     isEditing = false;
     editingIndex = null;
   }
@@ -150,14 +174,17 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
       );
       return;
     }
-    applicantName = app['applicantName'];
-    applicantIC = app['applicantIC'];
-    assistanceType = app['assistanceType'];
-    householdIncome = app['householdIncome'];
-    dependentsCount = app['dependentsCount'];
-    employmentStatus = app['employmentStatus'];
-    assistanceReason = app['assistanceReason'];
-    documentsPath = app['documentsPath'];
+    if (app['editCount'] >= 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('You cannot edit this application more than 3 times.')),
+      );
+      return;
+    }
+    selectedPosition = app['position'];
+    selectedCompany = app['company'];
+    selectedDepartment = app['department'];
+    resumePath = app['resumePath'];
+    supportingDocs = List<String>.from(app['supportingDocs']);
     isEditing = true;
     isCreating = false;
     editingIndex = index;
@@ -171,27 +198,58 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
     setState(() {});
   }
 
-  Future<void> _pickDocuments() async {
+  Future<void> _pickResume() async {
     final result = await FilePicker.platform.pickFiles(type: FileType.any, allowMultiple: false);
     if (result != null && result.files.isNotEmpty) {
-      documentsPath = result.files.single.path;
+      resumePath = result.files.single.path;
       setState(() {});
     }
   }
 
+  Future<void> _pickSupportingDocuments() async {
+    final result = await FilePicker.platform.pickFiles(type: FileType.any, allowMultiple: true);
+    if (result != null) {
+      supportingDocs.addAll(result.files.map((f) => f.path!).toList());
+      setState(() {});
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    return DateFormat('yyyy-MM-dd HH:mm').format(date);
+  }
+
+  Future<bool> _onWillPop() async {
+    // If editing or creating, just revert to list view
+    if (isEditing || isCreating) {
+      setState(() {
+        isEditing = false;
+        isCreating = false;
+      });
+      return false; // Don't pop
+    }
+    return true; // Pop if not editing/creating
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: _buildAppBar(),
-      body: _buildContent(),
-      bottomNavigationBar: CustomBottomNavBar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: _buildAppBar(),
+        body: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 500),
+          transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+          child: _buildContent(),
+        ),
+        bottomNavigationBar: CustomBottomNavBar(
+          selectedIndex: _selectedIndex,
+          onItemTapped: (index) {
+            setState(() {
+              _selectedIndex = index;
+            });
+          },
+        ),
       ),
     );
   }
@@ -200,8 +258,16 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
     return AppBar(
       leading: IconButton(
         icon: Icon(Icons.arrow_back, color: Colors.white),
-        onPressed: () {
-          Navigator.pop(context);
+        onPressed: () async {
+          // If editing/creating, revert to list, else pop
+          if (isEditing || isCreating) {
+            setState(() {
+              isEditing = false;
+              isCreating = false;
+            });
+          } else {
+            Navigator.pop(context);
+          }
         },
       ),
       flexibleSpace: Container(
@@ -215,7 +281,7 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
       ),
       elevation: 0,
       title: Text(
-        'e-Bantuan',
+        'e-Perjawatan 🏢',
         style: GoogleFonts.poppins(fontSize: 24.0, fontWeight: FontWeight.bold, color: Colors.white),
       ),
       centerTitle: true,
@@ -229,6 +295,7 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
     return Stack(
       children: [
         _buildApplicationsList(),
+        // Big buttons row at the bottom
         Positioned(
           bottom: 0,
           left: 0,
@@ -241,10 +308,10 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _startCreating,
-                    icon: Icon(Icons.add, size: 18.0),
+                    icon: Text('  ➕', style: TextStyle(fontSize: 18.0)),
                     label: Text(
                       'Add Application',
-                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
@@ -257,10 +324,10 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _refreshStatus,
-                    icon: Icon(Icons.refresh, size: 18.0),
+                    icon: Text('🔄', style: TextStyle(fontSize: 18.0)),
                     label: Text(
                       'Refresh Status',
-                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
@@ -279,6 +346,7 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
 
   Widget _buildApplicationFormWidget() {
     return SingleChildScrollView(
+      key: ValueKey('formView'),
       padding: const EdgeInsets.all(16.0),
       child: Container(
         decoration: _whiteCardDecoration(),
@@ -287,7 +355,7 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              isEditing ? 'Edit Your Application 🗒' : 'Submit Your Application 🗒',
+              (isEditing ? 'Edit Your Application' : 'Submit Your Application') + ' 📝',
               style: GoogleFonts.poppins(
                 fontSize: 20.0,
                 fontWeight: FontWeight.bold,
@@ -295,22 +363,54 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
               ),
             ),
             const SizedBox(height: 16.0),
-            _buildTextField('Nama Pemohon', (val) => setState(() => applicantName = val), applicantName),
+            // Using CustomDropdown for Position
+            CustomDropdown(
+              label: 'Position 💼',
+              items: positions,
+              value: selectedPosition,
+              onChanged: (val) => setState(() {
+                selectedPosition = val;
+              }),
+            ),
             const SizedBox(height: 16.0),
-            _buildTextField('Nombor Kad Pengenalan', (val) => setState(() => applicantIC = val), applicantIC),
+            // Using CustomDropdown for Company/Agency
+            CustomDropdown(
+              label: 'Agency / Department 🏢',
+              items: companies,
+              value: selectedCompany,
+              onChanged: (val) => setState(() {
+                selectedCompany = val;
+              }),
+            ),
             const SizedBox(height: 16.0),
-            _buildDropdownField('Jenis Bantuan', assistanceOptions, (val) => setState(() => assistanceType = val), assistanceType),
+            // Using CustomDropdown for Department
+            CustomDropdown(
+              label: 'Department 🗂',
+              items: departments,
+              value: selectedDepartment,
+              onChanged: (val) => setState(() {
+                selectedDepartment = val;
+              }),
+            ),
             const SizedBox(height: 16.0),
-            _buildTextField('Pendapatan Isi Rumah', (val) => setState(() => householdIncome = val), householdIncome),
+            // Using CustomFileUploadButton for Resume
+            CustomFileUploadButton(
+              label: 'Upload Resume (Optional)',
+              fileInfo: resumePath != null ? resumePath!.split('/').last : null,
+              onTap: _pickResume,
+              iconData: Icons.description_outlined,
+            ),
             const SizedBox(height: 16.0),
-            _buildTextField('Bilangan Tanggungan', (val) => setState(() => dependentsCount = val), dependentsCount),
-            const SizedBox(height: 16.0),
-            _buildDropdownField('Status Pekerjaan', employmentOptions, (val) => setState(() => employmentStatus = val), employmentStatus),
-            const SizedBox(height: 16.0),
-            _buildTextField('Sebab Permohonan', (val) => setState(() => assistanceReason = val), assistanceReason),
-            const SizedBox(height: 16.0),
-            _buildFileUploadButton('Dokumen Sokongan', documentsPath, _pickDocuments, Icons.attach_file),
+            // Using CustomFileUploadButton for Supporting Docs
+            CustomFileUploadButton(
+              label: 'Upload Supporting Docs (Optional)',
+              fileInfo: supportingDocs.isEmpty ? null : supportingDocs.length.toString(),
+              onTap: _pickSupportingDocuments,
+              iconData: Icons.attach_file,
+              multiple: true,
+            ),
             const SizedBox(height: 24.0),
+            // Submit Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -326,6 +426,11 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
                 ),
               ),
             ),
+            const SizedBox(height: 20.0),
+            Text(
+              'You can edit pending applications up to 3 times before they are approved or rejected.\nResume and supporting documents are optional.',
+              style: GoogleFonts.poppins(fontSize: 14.0, color: AppColors.textSecondary),
+            ),
           ],
         ),
       ),
@@ -334,12 +439,13 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
 
   Widget _buildApplicationsList() {
     return SingleChildScrollView(
+      key: ValueKey('listView'),
       padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0, bottom: 100.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Your Applications 💃',
+            'Your Applications 🗃',
             style: GoogleFonts.poppins(fontSize: 20.0, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
           ),
           const SizedBox(height: 16.0),
@@ -378,16 +484,11 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildInfoRow('Nama Pemohon', app['applicantName']),
-          _buildInfoRow('Nombor Kad Pengenalan', app['applicantIC']),
-          _buildInfoRow('Jenis Bantuan', app['assistanceType']),
-          _buildInfoRow('Pendapatan Isi Rumah', app['householdIncome']),
-          _buildInfoRow('Bilangan Tanggungan', app['dependentsCount']),
-          _buildInfoRow('Status Pekerjaan', app['employmentStatus']),
-          _buildInfoRow('Sebab Permohonan', app['assistanceReason']),
-          _buildInfoRow('Dokumen Sokongan', app['documentsPath'] ?? '-'),
-          _buildInfoRow('Application Date', _formatDate(DateTime.parse(app['applicationDate'].toString()))),
-          _buildInfoRow('Last Update Date', _formatDate(DateTime.parse(app['latestUpdateDate'].toString()))),
+          _buildInfoRow('Position', app['position']),
+          _buildInfoRow('Company/Agency/Dept.', app['company']),
+          if ((app['department'] as String).isNotEmpty) _buildInfoRow('Department', app['department']),
+          _buildInfoRow('Application Date', _formatDate(app['applicationDate'])),
+          _buildInfoRow('Last Update Date', _formatDate(app['latestUpdateDate'])),
           Row(
             children: [
               Text('Status: ', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: AppColors.primary)),
@@ -395,6 +496,7 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
             ],
           ),
           const SizedBox(height: 12.0),
+          // If pending, show edit/delete. If not, no edit/delete.
           if (app['status'] == 'Pending')
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -443,97 +545,6 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
     );
   }
 
-  Widget _buildDropdownField(String label, List<String> items, ValueChanged<String?> onChanged, String? currentValue) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.poppins(fontSize: 16.0, fontWeight: FontWeight.w600, color: AppColors.primary),
-        ),
-        const SizedBox(height: 8.0),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.background,
-            borderRadius: BorderRadius.circular(12.0),
-            border: Border.all(
-              color: AppColors.primary.withOpacity(0.4),
-              width: 1.5,
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 12.0),
-          child: DropdownButtonFormField<String>(
-            value: currentValue,
-            decoration: const InputDecoration(border: InputBorder.none),
-            style: GoogleFonts.poppins(fontSize: 14.0, color: AppColors.textPrimary),
-            hint: Text(
-              'Pilih $label',
-              style: GoogleFonts.poppins(fontSize: 14.0, color: AppColors.textSecondary.withOpacity(0.8)),
-            ),
-            items: items.map((item) => DropdownMenuItem<String>(value: item, child: Text(item, overflow: TextOverflow.ellipsis, maxLines: 1))).toList(),
-            onChanged: onChanged,
-            isExpanded: true,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTextField(String label, ValueChanged<String?> onChanged, String? currentValue) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.poppins(fontSize: 16.0, fontWeight: FontWeight.w600, color: AppColors.primary),
-        ),
-        const SizedBox(height: 8.0),
-        TextFormField(
-          initialValue: currentValue,
-          decoration: InputDecoration(
-            contentPadding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 12.0),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide: BorderSide(color: AppColors.primary.withOpacity(0.4), width: 1.5),
-            ),
-            hintText: 'Masukkan $label',
-            hintStyle: GoogleFonts.poppins(fontSize: 14.0, color: AppColors.textSecondary.withOpacity(0.8)),
-          ),
-          style: GoogleFonts.poppins(fontSize: 14.0, color: AppColors.textPrimary),
-          onChanged: onChanged,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFileUploadButton(String label, String? fileInfo, VoidCallback onTap, IconData iconData) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12.0),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 16.0),
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(12.0),
-          border: Border.all(color: AppColors.primary.withOpacity(0.4), width: 1.5),
-        ),
-        child: Row(
-          children: [
-            Icon(iconData, color: AppColors.primary),
-            const SizedBox(width: 10.0),
-            Expanded(
-              child: Text(
-                fileInfo == null ? label : '$label: $fileInfo',
-                style: GoogleFonts.poppins(fontSize: 14.0, color: AppColors.textSecondary),
-              ),
-            ),
-            Icon(Icons.upload_file, color: AppColors.textSecondary),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildInfoRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -566,9 +577,5 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
         ),
       ],
     );
-  }
-
-  String _formatDate(DateTime date) {
-    return DateFormat('yyyy-MM-dd').format(date);
   }
 }

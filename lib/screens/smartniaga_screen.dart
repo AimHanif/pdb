@@ -1,11 +1,17 @@
+// smart_niaga_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
-import 'navbar.dart';
-import 'colors.dart';
+import '../navbar.dart';
+import '../colors.dart';
+
+// Import the custom widgets
+import '../widgets/custom_dropdown.dart';
+import '../widgets/custom_text_field.dart';
+import '../widgets/custom_multi_select_field.dart';
 
 class SmartNiagaScreen extends StatefulWidget {
   const SmartNiagaScreen({Key? key}) : super(key: key);
@@ -58,11 +64,21 @@ class _SmartNiagaScreenState extends State<SmartNiagaScreen> {
 
   void _loadApplications() {
     final storedApps = smartNiagaBox.get('applications', defaultValue: []);
-    applications = List<Map<String, dynamic>>.from(storedApps);
+    if (storedApps is List) {
+      applications = storedApps
+          .where((app) => app is Map)
+          .map((app) => Map<String, dynamic>.from(app as Map))
+          .toList();
+    } else {
+      applications = [];
+    }
   }
 
   void _saveApplications() {
-    smartNiagaBox.put('applications', applications);
+    smartNiagaBox.put(
+      'applications',
+      applications.map((app) => Map<String, dynamic>.from(app)).toList(),
+    );
   }
 
   void _submitApplication() {
@@ -95,6 +111,13 @@ class _SmartNiagaScreenState extends State<SmartNiagaScreen> {
     };
 
     if (isEditing && editingIndex != null) {
+      final app = applications[editingIndex!];
+      if (app['status'] != 'Pending') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('You can only edit pending applications.')),
+        );
+        return;
+      }
       applications[editingIndex!] = newApplication;
     } else {
       applications.add(newApplication);
@@ -170,17 +193,24 @@ class _SmartNiagaScreenState extends State<SmartNiagaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: _buildAppBar(),
-      body: _buildContent(),
-      bottomNavigationBar: CustomBottomNavBar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
+    return WillPopScope(
+      onWillPop: () async => await _onWillPop(),
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: _buildAppBar(),
+        body: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 500),
+          transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+          child: _buildContent(),
+        ),
+        bottomNavigationBar: CustomBottomNavBar(
+          selectedIndex: _selectedIndex,
+          onItemTapped: (index) {
+            setState(() {
+              _selectedIndex = index;
+            });
+          },
+        ),
       ),
     );
   }
@@ -218,6 +248,7 @@ class _SmartNiagaScreenState extends State<SmartNiagaScreen> {
     return Stack(
       children: [
         _buildApplicationsList(),
+        // Big buttons row at the bottom
         Positioned(
           bottom: 0,
           left: 0,
@@ -233,7 +264,7 @@ class _SmartNiagaScreenState extends State<SmartNiagaScreen> {
                     icon: Icon(Icons.add, size: 18.0),
                     label: Text(
                       'Add Application',
-                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
@@ -249,7 +280,7 @@ class _SmartNiagaScreenState extends State<SmartNiagaScreen> {
                     icon: Icon(Icons.refresh, size: 18.0),
                     label: Text(
                       'Refresh Status',
-                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
@@ -284,26 +315,81 @@ class _SmartNiagaScreenState extends State<SmartNiagaScreen> {
               ),
             ),
             const SizedBox(height: 16.0),
-            _buildTextField('Kawasan PBT', (val) => setState(() => pbtArea = val), pbtArea),
+            // Using CustomTextField for Kawasan PBT
+            CustomTextField(
+              label: 'Kawasan PBT 🏙️',
+              initialValue: pbtArea,
+              onChanged: (val) => setState(() => pbtArea = val),
+            ),
             const SizedBox(height: 16.0),
-            _buildDropdownField('Zon', yesNoOptions, (val) => setState(() => zone = val), zone),
+            // Using CustomDropdown for Zon
+            CustomDropdown(
+              label: 'Zon 📍',
+              items: yesNoOptions,
+              value: zone,
+              onChanged: (val) => setState(() => zone = val),
+            ),
             const SizedBox(height: 16.0),
-            _buildDropdownField('Lesen Perniagaan PBT', yesNoOptions, (val) => setState(() => pbtLicense = val), pbtLicense),
+            // Using CustomDropdown for Lesen Perniagaan PBT
+            CustomDropdown(
+              label: 'Lesen Perniagaan PBT 📝',
+              items: yesNoOptions,
+              value: pbtLicense,
+              onChanged: (val) => setState(() => pbtLicense = val),
+            ),
             const SizedBox(height: 16.0),
-            _buildTextField('No. Akaun Lesen Perniagaan PBT', (val) => setState(() => pbtLicenseAccount = val), pbtLicenseAccount),
+            // Using CustomTextField for No. Akaun Lesen Perniagaan PBT
+            CustomTextField(
+              label: 'No. Akaun Lesen Perniagaan PBT 💼',
+              initialValue: pbtLicenseAccount,
+              onChanged: (val) => setState(() => pbtLicenseAccount = val),
+            ),
             const SizedBox(height: 16.0),
-            _buildDropdownField('Daftar SSM', yesNoOptions, (val) => setState(() => ssmRegistration = val), ssmRegistration),
+            // Using CustomDropdown for Daftar SSM
+            CustomDropdown(
+              label: 'Daftar SSM 📄',
+              items: yesNoOptions,
+              value: ssmRegistration,
+              onChanged: (val) => setState(() => ssmRegistration = val),
+            ),
             const SizedBox(height: 16.0),
-            _buildTextField('Nama Syarikat', (val) => setState(() => companyName = val), companyName),
+            // Using CustomTextField for Nama Syarikat
+            CustomTextField(
+              label: 'Nama Syarikat 🏢',
+              initialValue: companyName,
+              onChanged: (val) => setState(() => companyName = val),
+            ),
             const SizedBox(height: 16.0),
-            _buildTextField('No. Pendaftaran SSM', (val) => setState(() => ssmNumber = val), ssmNumber),
+            // Using CustomTextField for No. Pendaftaran SSM
+            CustomTextField(
+              label: 'No. Pendaftaran SSM 📇',
+              initialValue: ssmNumber,
+              onChanged: (val) => setState(() => ssmNumber = val),
+            ),
             const SizedBox(height: 16.0),
-            _buildTextField('Nama Jenama', (val) => setState(() => brandName = val), brandName),
+            // Using CustomTextField for Nama Jenama
+            CustomTextField(
+              label: 'Nama Jenama 🌟',
+              initialValue: brandName,
+              onChanged: (val) => setState(() => brandName = val),
+            ),
             const SizedBox(height: 16.0),
-            _buildTextField('URL Laman Web / Media Sosial', (val) => setState(() => websiteUrl = val), websiteUrl),
+            // Using CustomTextField for URL Laman Web / Media Sosial
+            CustomTextField(
+              label: 'URL Laman Web / Media Sosial 🌐',
+              initialValue: websiteUrl,
+              onChanged: (val) => setState(() => websiteUrl = val),
+            ),
             const SizedBox(height: 16.0),
-            _buildMultiSelectField('Pemasaran (Platform Online)', marketingOptions, (val) => setState(() => marketingPlatforms = val)),
+            // Using CustomMultiSelectField for Pemasaran (Platform Online)
+            CustomMultiSelectField(
+              label: 'Pemasaran (Platform Online) 📱',
+              options: marketingOptions,
+              selectedOptions: marketingPlatforms,
+              onSelectionChanged: (selected) => setState(() => marketingPlatforms = selected),
+            ),
             const SizedBox(height: 24.0),
+            // Submit Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -380,9 +466,9 @@ class _SmartNiagaScreenState extends State<SmartNiagaScreen> {
           _buildInfoRow('No. Pendaftaran SSM', app['ssmNumber'] ?? '-'),
           _buildInfoRow('Nama Jenama', app['brandName'] ?? '-'),
           _buildInfoRow('URL Laman Web / Media Sosial', app['websiteUrl'] ?? '-'),
-          _buildInfoRow('Pemasaran (Platform Online)', app['marketingPlatforms'].join(', ')),
-          _buildInfoRow('Application Date', _formatDate(DateTime.parse(app['applicationDate'].toString()))),
-          _buildInfoRow('Last Update Date', _formatDate(DateTime.parse(app['latestUpdateDate'].toString()))),
+          _buildInfoRow('Pemasaran (Platform Online)', (app['marketingPlatforms'] as List).join(', ') ?? '-'),
+          _buildInfoRow('Application Date', _formatDate(app['applicationDate'])),
+          _buildInfoRow('Last Update Date', _formatDate(app['latestUpdateDate'])),
           Row(
             children: [
               Text('Status: ', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: AppColors.primary)),
@@ -439,95 +525,19 @@ class _SmartNiagaScreenState extends State<SmartNiagaScreen> {
   }
 
   Widget _buildDropdownField(String label, List<String> items, ValueChanged<String?> onChanged, String? currentValue) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.poppins(fontSize: 16.0, fontWeight: FontWeight.w600, color: AppColors.primary),
-        ),
-        const SizedBox(height: 8.0),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.background,
-            borderRadius: BorderRadius.circular(12.0),
-            border: Border.all(
-              color: AppColors.primary.withOpacity(0.4),
-              width: 1.5,
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 12.0),
-          child: DropdownButtonFormField<String>(
-            value: currentValue,
-            decoration: const InputDecoration(border: InputBorder.none),
-            style: GoogleFonts.poppins(fontSize: 14.0, color: AppColors.textPrimary),
-            hint: Text(
-              'Pilih $label',
-              style: GoogleFonts.poppins(fontSize: 14.0, color: AppColors.textSecondary.withOpacity(0.8)),
-            ),
-            items: items.map((item) => DropdownMenuItem<String>(value: item, child: Text(item, overflow: TextOverflow.ellipsis, maxLines: 1))).toList(),
-            onChanged: onChanged,
-            isExpanded: true,
-          ),
-        ),
-      ],
+    return CustomDropdown(
+      label: label,
+      items: items,
+      value: currentValue,
+      onChanged: onChanged,
     );
   }
 
   Widget _buildTextField(String label, ValueChanged<String?> onChanged, String? currentValue) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.poppins(fontSize: 16.0, fontWeight: FontWeight.w600, color: AppColors.primary),
-        ),
-        const SizedBox(height: 8.0),
-        TextFormField(
-          initialValue: currentValue,
-          decoration: InputDecoration(
-            contentPadding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 12.0),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide: BorderSide(color: AppColors.primary.withOpacity(0.4), width: 1.5),
-            ),
-            hintText: 'Masukkan $label',
-            hintStyle: GoogleFonts.poppins(fontSize: 14.0, color: AppColors.textSecondary.withOpacity(0.8)),
-          ),
-          style: GoogleFonts.poppins(fontSize: 14.0, color: AppColors.textPrimary),
-          onChanged: onChanged,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMultiSelectField(String label, List<String> items, ValueChanged<List<String>> onChanged) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.poppins(fontSize: 16.0, fontWeight: FontWeight.w600, color: AppColors.primary),
-        ),
-        const SizedBox(height: 8.0),
-        Wrap(
-          spacing: 8.0,
-          children: items.map((item) {
-            return FilterChip(
-              label: Text(item, style: GoogleFonts.poppins(color: AppColors.textPrimary)),
-              selected: marketingPlatforms.contains(item),
-              onSelected: (isSelected) {
-                setState(() {
-                  isSelected ? marketingPlatforms.add(item) : marketingPlatforms.remove(item);
-                  onChanged(marketingPlatforms);
-                });
-              },
-              backgroundColor: AppColors.background,
-              selectedColor: AppColors.primary.withOpacity(0.2),
-            );
-          }).toList(),
-        ),
-      ],
+    return CustomTextField(
+      label: label,
+      initialValue: currentValue,
+      onChanged: onChanged,
     );
   }
 
@@ -565,7 +575,24 @@ class _SmartNiagaScreenState extends State<SmartNiagaScreen> {
     );
   }
 
-  String _formatDate(DateTime date) {
-    return DateFormat('yyyy-MM-dd').format(date);
+  Future<bool> _onWillPop() async {
+    // If editing or creating, revert to list view
+    if (isEditing || isCreating) {
+      setState(() {
+        isEditing = false;
+        isCreating = false;
+      });
+      return false; // Don't pop
+    }
+    return true; // Pop if not editing/creating
+  }
+
+  String _formatDate(dynamic date) {
+    if (date is DateTime) {
+      return DateFormat('yyyy-MM-dd').format(date);
+    } else if (date is String) {
+      return DateFormat('yyyy-MM-dd').format(DateTime.parse(date));
+    }
+    return 'Invalid Date';
   }
 }

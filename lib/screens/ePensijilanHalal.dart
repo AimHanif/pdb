@@ -1,34 +1,45 @@
+// ePensijilanHalal.dart
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
-import 'navbar.dart';
-import 'colors.dart';
+import 'package:file_picker/file_picker.dart';
+import '../navbar.dart';
+import '../colors.dart';
 
-class ETempahanScreen extends StatefulWidget {
-  const ETempahanScreen({Key? key}) : super(key: key);
+// Import the custom widgets
+import '../widgets/custom_dropdown.dart';
+import '../widgets/custom_date_picker.dart';
+import '../widgets/custom_file_upload_button.dart';
+import '../widgets/custom_text_field.dart'; // If you have a custom text field
+
+class EPensijilanHalalScreen extends StatefulWidget {
+  const EPensijilanHalalScreen({Key? key}) : super(key: key);
 
   @override
-  State<ETempahanScreen> createState() => _ETempahanScreenState();
+  State<EPensijilanHalalScreen> createState() => _EPensijilanHalalScreenState();
 }
 
-class _ETempahanScreenState extends State<ETempahanScreen> {
+class _EPensijilanHalalScreenState extends State<EPensijilanHalalScreen> {
   int _selectedIndex = 0;
-  late Box eTempahanBox;
+  late Box ePensijilanBox;
   bool isBoxReady = false;
 
-  List<Map<String, dynamic>> bookings = [];
+  List<Map<String, dynamic>> applications = [];
 
-  String? selectedFacility; // Kemudahan yang ditempah
-  String? bookingDate; // Tarikh Tempahan
-  String? bookingTime; // Masa Tempahan
-  String? location; // Lokasi
+  String? hasSystem; // Sistem Jaminan Halal (HAS)
+  String? halalSupervisor; // Penyelia / Eksekutif Halal
+  String? salesValue; // Nilai Jualan
+  String? companyName; // Nama Syarikat
 
-  final List<String> facilityOptions = [
-    'Dewan',
-    'Padang',
-    'Bilik Latihan/Auditorium',
-    'Gelanggang'
+  final List<String> hasOptions = ['Ada', 'Tiada'];
+  final List<String> supervisorOptions = ['Dr. Ahmad', 'Prof. Lim', 'Ms. Siti', 'Mr. Tan'];
+  final List<String> salesOptions = [
+    'Industri Mikro (RM300 Ribu Kebawah)',
+    'Industri Kecil (RM300 Ribu - RM15 Juta)',
+    'Perusahaan Kecil Sederhana (RM15 Juta - RM50 Juta)',
+    'Multinasional (RM50 Juta Keatas)'
   ];
 
   bool isEditing = false;
@@ -42,49 +53,71 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
   }
 
   Future<void> _initHiveData() async {
-    if (!Hive.isBoxOpen('eTempahanData')) {
-      await Hive.openBox('eTempahanData');
+    if (!Hive.isBoxOpen('ePensijilanData')) {
+      await Hive.openBox('ePensijilanData');
     }
-    eTempahanBox = Hive.box('eTempahanData');
-    _loadBookings();
+    ePensijilanBox = Hive.box('ePensijilanData');
+    _loadApplications();
     setState(() {
       isBoxReady = true;
     });
   }
 
-  void _loadBookings() {
-    final storedBookings = eTempahanBox.get('bookings', defaultValue: []);
-    bookings = List<Map<String, dynamic>>.from(storedBookings);
+  void _loadApplications() {
+    final storedApps = ePensijilanBox.get('applications', defaultValue: []);
+    if (storedApps is List) {
+      applications = storedApps
+          .where((app) => app is Map)
+          .map((app) => Map<String, dynamic>.from(app as Map))
+          .toList();
+    } else {
+      applications = [];
+    }
   }
 
-  void _saveBookings() {
-    eTempahanBox.put('bookings', bookings);
+  void _saveApplications() {
+    ePensijilanBox.put(
+      'applications',
+      applications.map((app) => Map<String, dynamic>.from(app)).toList(),
+    );
   }
 
-  void _submitBooking() {
-    if (selectedFacility == null || bookingDate == null || bookingTime == null || location == null) {
+  void _submitApplication() {
+    if (hasSystem == null ||
+        halalSupervisor == null ||
+        salesValue == null ||
+        companyName == null ||
+        companyName!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Sila lengkapkan semua maklumat yang diperlukan sebelum meneruskan.')),
       );
       return;
     }
 
-    final newBooking = {
-      'selectedFacility': selectedFacility,
-      'bookingDate': bookingDate,
-      'bookingTime': bookingTime,
-      'location': location,
+    final newApplication = {
+      'hasSystem': hasSystem,
+      'halalSupervisor': halalSupervisor,
+      'salesValue': salesValue,
+      'companyName': companyName,
       'status': 'Pending',
-      'bookingDateTime': DateTime.now(),
+      'applicationDate': DateTime.now(),
+      'latestUpdateDate': DateTime.now(),
     };
 
     if (isEditing && editingIndex != null) {
-      bookings[editingIndex!] = newBooking;
+      final app = applications[editingIndex!];
+      if (app['status'] != 'Pending') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('You can only edit pending applications.')),
+        );
+        return;
+      }
+      applications[editingIndex!] = newApplication;
     } else {
-      bookings.add(newBooking);
+      applications.add(newApplication);
     }
 
-    _saveBookings();
+    _saveApplications();
     _resetForm();
     setState(() {
       isCreating = false;
@@ -93,40 +126,40 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
   }
 
   void _resetForm() {
-    selectedFacility = null;
-    bookingDate = null;
-    bookingTime = null;
-    location = null;
+    hasSystem = null;
+    halalSupervisor = null;
+    salesValue = null;
+    companyName = null;
     isEditing = false;
     editingIndex = null;
   }
 
   void _refreshStatus() {
-    _loadBookings();
+    _loadApplications();
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('All statuses refreshed!')),
+        SnackBar(content: Text('All statuses refreshed!'))
     );
     setState(() {});
   }
 
-  void _deleteBooking(int index) {
-    bookings.removeAt(index);
-    _saveBookings();
+  void _deleteApplication(int index) {
+    applications.removeAt(index);
+    _saveApplications();
     setState(() {});
   }
 
-  void _editBooking(int index) {
-    final booking = bookings[index];
-    if (booking['status'] != 'Pending') {
+  void _editApplication(int index) {
+    final app = applications[index];
+    if (app['status'] != 'Pending') {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('You can only edit pending bookings.')),
+        SnackBar(content: Text('You can only edit pending applications.')),
       );
       return;
     }
-    selectedFacility = booking['selectedFacility'];
-    bookingDate = booking['bookingDate'];
-    bookingTime = booking['bookingTime'];
-    location = booking['location'];
+    hasSystem = app['hasSystem'];
+    halalSupervisor = app['halalSupervisor'];
+    salesValue = app['salesValue'];
+    companyName = app['companyName'];
     isEditing = true;
     isCreating = false;
     editingIndex = index;
@@ -142,17 +175,24 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: _buildAppBar(),
-      body: _buildContent(),
-      bottomNavigationBar: CustomBottomNavBar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
+    return WillPopScope(
+      onWillPop: () async => await _onWillPop(),
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: _buildAppBar(),
+        body: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 500),
+          transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+          child: _buildContent(),
+        ),
+        bottomNavigationBar: CustomBottomNavBar(
+          selectedIndex: _selectedIndex,
+          onItemTapped: (index) {
+            setState(() {
+              _selectedIndex = index;
+            });
+          },
+        ),
       ),
     );
   }
@@ -176,7 +216,7 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
       ),
       elevation: 0,
       title: Text(
-        'e-Tempahan',
+        'e-Pensijilan Halal',
         style: GoogleFonts.poppins(fontSize: 24.0, fontWeight: FontWeight.bold, color: Colors.white),
       ),
       centerTitle: true,
@@ -184,12 +224,13 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
   }
 
   Widget _buildContent() {
-    if (isCreating || isEditing || bookings.isEmpty) {
-      return _buildBookingFormWidget();
+    if (isCreating || isEditing || applications.isEmpty) {
+      return _buildApplicationFormWidget();
     }
     return Stack(
       children: [
-        _buildBookingsList(),
+        _buildApplicationsList(),
+        // Big buttons row at the bottom
         Positioned(
           bottom: 0,
           left: 0,
@@ -204,8 +245,8 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
                     onPressed: _startCreating,
                     icon: Icon(Icons.add, size: 18.0),
                     label: Text(
-                      'Add Booking',
-                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                      'Add Application',
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
@@ -221,7 +262,7 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
                     icon: Icon(Icons.refresh, size: 18.0),
                     label: Text(
                       'Refresh Status',
-                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
@@ -238,7 +279,7 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
     );
   }
 
-  Widget _buildBookingFormWidget() {
+  Widget _buildApplicationFormWidget() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Container(
@@ -248,7 +289,7 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              isEditing ? 'Edit Your Booking 🏢' : 'Submit Your Booking 🏢',
+              isEditing ? 'Edit Your Application 📝' : 'Submit Your Application 📝',
               style: GoogleFonts.poppins(
                 fontSize: 20.0,
                 fontWeight: FontWeight.bold,
@@ -256,25 +297,57 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
               ),
             ),
             const SizedBox(height: 16.0),
-            _buildDropdownField('Kemudahan', facilityOptions, (val) => setState(() => selectedFacility = val), selectedFacility),
+            // Using CustomDropdown for HAS
+            CustomDropdown(
+              label: 'Sistem Jaminan Halal (HAS) 📜',
+              items: hasOptions,
+              value: hasSystem,
+              onChanged: (val) => setState(() {
+                hasSystem = val;
+              }),
+            ),
             const SizedBox(height: 16.0),
-            _buildTextField('Tarikh Tempahan', (val) => setState(() => bookingDate = val), bookingDate),
+            // Using CustomDropdown for Supervisor
+            CustomDropdown(
+              label: 'Penyelia / Eksekutif Halal 👨‍💼',
+              items: supervisorOptions,
+              value: halalSupervisor,
+              onChanged: (val) => setState(() {
+                halalSupervisor = val;
+              }),
+            ),
             const SizedBox(height: 16.0),
-            _buildTextField('Masa Tempahan', (val) => setState(() => bookingTime = val), bookingTime),
+            // Using CustomDropdown for Sales Value
+            CustomDropdown(
+              label: 'Nilai Jualan 💰',
+              items: salesOptions,
+              value: salesValue,
+              onChanged: (val) => setState(() {
+                salesValue = val;
+              }),
+            ),
             const SizedBox(height: 16.0),
-            _buildTextField('Lokasi', (val) => setState(() => location = val), location),
+            // Using CustomTextField for Company Name
+            CustomTextField(
+              label: 'Nama Syarikat 🏢',
+              initialValue: companyName,
+              onChanged: (val) => setState(() {
+                companyName = val;
+              }),
+            ),
             const SizedBox(height: 24.0),
+            // Submit Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _submitBooking,
+                onPressed: _submitApplication,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   padding: const EdgeInsets.symmetric(vertical: 15.0),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
                 ),
                 child: Text(
-                  isEditing ? 'Save Changes' : 'Submit Booking',
+                  isEditing ? 'Save Changes' : 'Submit Application',
                   style: GoogleFonts.poppins(fontSize: 16.0, fontWeight: FontWeight.bold, color: AppColors.buttonText),
                 ),
               ),
@@ -285,32 +358,32 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
     );
   }
 
-  Widget _buildBookingsList() {
+  Widget _buildApplicationsList() {
     return SingleChildScrollView(
       padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0, bottom: 100.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Your Bookings 🏟',
+            'Your Applications 🗃',
             style: GoogleFonts.poppins(fontSize: 20.0, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
           ),
           const SizedBox(height: 16.0),
-          ...bookings.asMap().entries.map((entry) {
+          ...applications.asMap().entries.map((entry) {
             final index = entry.key;
-            final booking = entry.value;
-            return _buildBookingCard(booking, index);
+            final app = entry.value;
+            return _buildApplicationCard(app, index);
           }).toList(),
         ],
       ),
     );
   }
 
-  Widget _buildBookingCard(Map<String, dynamic> booking, int index) {
+  Widget _buildApplicationCard(Map<String, dynamic> app, int index) {
     String statusText;
     Color statusColor;
 
-    switch (booking['status'].toLowerCase()) {
+    switch (app['status'].toLowerCase()) {
       case 'approved':
         statusColor = Colors.green;
         statusText = 'Approved ✅';
@@ -331,11 +404,12 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildInfoRow('Kemudahan', booking['selectedFacility']),
-          _buildInfoRow('Tarikh Tempahan', booking['bookingDate']),
-          _buildInfoRow('Masa Tempahan', booking['bookingTime']),
-          _buildInfoRow('Lokasi', booking['location']),
-          _buildInfoRow('Booking Date', _formatDate(DateTime.parse(booking['bookingDateTime'].toString()))),
+          _buildInfoRow('Sistem Jaminan Halal (HAS)', app['hasSystem']),
+          _buildInfoRow('Penyelia / Eksekutif Halal', app['halalSupervisor']),
+          _buildInfoRow('Nilai Jualan', app['salesValue']),
+          _buildInfoRow('Nama Syarikat', app['companyName']),
+          _buildInfoRow('Application Date', _formatDate(app['applicationDate'])),
+          _buildInfoRow('Last Update Date', _formatDate(app['latestUpdateDate'])),
           Row(
             children: [
               Text('Status: ', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: AppColors.primary)),
@@ -343,7 +417,7 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
             ],
           ),
           const SizedBox(height: 12.0),
-          if (booking['status'] == 'Pending')
+          if (app['status'] == 'Pending')
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -361,9 +435,9 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
       onSelected: (value) {
         if (value == 'edit') {
-          _editBooking(index);
+          _editApplication(index);
         } else if (value == 'delete') {
-          _deleteBooking(index);
+          _deleteApplication(index);
         }
       },
       itemBuilder: (context) => [
@@ -386,69 +460,6 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
               Text('Delete', style: GoogleFonts.poppins(color: AppColors.textPrimary)),
             ],
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDropdownField(String label, List<String> items, ValueChanged<String?> onChanged, String? currentValue) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.poppins(fontSize: 16.0, fontWeight: FontWeight.w600, color: AppColors.primary),
-        ),
-        const SizedBox(height: 8.0),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.background,
-            borderRadius: BorderRadius.circular(12.0),
-            border: Border.all(
-              color: AppColors.primary.withOpacity(0.4),
-              width: 1.5,
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 12.0),
-          child: DropdownButtonFormField<String>(
-            value: currentValue,
-            decoration: const InputDecoration(border: InputBorder.none),
-            style: GoogleFonts.poppins(fontSize: 14.0, color: AppColors.textPrimary),
-            hint: Text(
-              'Pilih $label',
-              style: GoogleFonts.poppins(fontSize: 14.0, color: AppColors.textSecondary.withOpacity(0.8)),
-            ),
-            items: items.map((item) => DropdownMenuItem<String>(value: item, child: Text(item, overflow: TextOverflow.ellipsis, maxLines: 1))).toList(),
-            onChanged: onChanged,
-            isExpanded: true,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTextField(String label, ValueChanged<String?> onChanged, String? currentValue) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.poppins(fontSize: 16.0, fontWeight: FontWeight.w600, color: AppColors.primary),
-        ),
-        const SizedBox(height: 8.0),
-        TextFormField(
-          initialValue: currentValue,
-          decoration: InputDecoration(
-            contentPadding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 12.0),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide: BorderSide(color: AppColors.primary.withOpacity(0.4), width: 1.5),
-            ),
-            hintText: 'Masukkan $label',
-            hintStyle: GoogleFonts.poppins(fontSize: 14.0, color: AppColors.textSecondary.withOpacity(0.8)),
-          ),
-          style: GoogleFonts.poppins(fontSize: 14.0, color: AppColors.textPrimary),
-          onChanged: onChanged,
         ),
       ],
     );
@@ -488,7 +499,24 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
     );
   }
 
-  String _formatDate(DateTime date) {
-    return DateFormat('yyyy-MM-dd').format(date);
+  Future<bool> _onWillPop() async {
+    // If editing or creating, just revert to list view
+    if (isEditing || isCreating) {
+      setState(() {
+        isEditing = false;
+        isCreating = false;
+      });
+      return false; // Don't pop
+    }
+    return true; // Pop if not editing/creating
+  }
+
+  String _formatDate(dynamic date) {
+    if (date is DateTime) {
+      return DateFormat('yyyy-MM-dd').format(date);
+    } else if (date is String) {
+      return DateFormat('yyyy-MM-dd').format(DateTime.parse(date));
+    }
+    return 'Invalid Date';
   }
 }

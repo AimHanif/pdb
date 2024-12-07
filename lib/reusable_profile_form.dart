@@ -28,16 +28,14 @@ class _ReusableProfileFormState extends State<ReusableProfileForm> {
   Future<void> _showDateTimePicker(FieldDefinition fieldDef) async {
     final currentValue = widget.controllers[fieldDef.key]?.text ?? '';
     DateTime initialDate = DateTime.now();
+
     if (currentValue.isNotEmpty) {
-      final parts = currentValue.split(' ');
-      if (parts.isNotEmpty) {
-        final datePart = parts[0].split('/');
-        if (datePart.length == 3) {
-          final day = int.tryParse(datePart[0]) ?? DateTime.now().day;
-          final month = int.tryParse(datePart[1]) ?? DateTime.now().month;
-          final year = int.tryParse(datePart[2]) ?? DateTime.now().year;
-          initialDate = DateTime(year, month, day);
-        }
+      final datePart = currentValue.split('/');
+      if (datePart.length == 3) {
+        final day = int.tryParse(datePart[0]) ?? DateTime.now().day;
+        final month = int.tryParse(datePart[1]) ?? DateTime.now().month;
+        final year = int.tryParse(datePart[2]) ?? DateTime.now().year;
+        initialDate = DateTime(year, month, day);
       }
     }
 
@@ -50,16 +48,7 @@ class _ReusableProfileFormState extends State<ReusableProfileForm> {
 
     if (selectedDate == null) return;
 
-    final selectedTime = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(selectedDate),
-    );
-
-    if (selectedTime == null) return;
-
-    final finalDateTime = DateTime(selectedDate.year, selectedDate.month, selectedDate.day, selectedTime.hour, selectedTime.minute);
-    final formatted = DateFormat('d/M/yyyy HH:mm').format(finalDateTime);
-
+    final formatted = DateFormat('d/M/yyyy').format(selectedDate); // Only date
     widget.controllers[fieldDef.key]?.text = formatted;
     widget.onSave(fieldDef.key, formatted);
     setState(() {});
