@@ -1,4 +1,3 @@
-// widgets/custom_dropdown.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../colors.dart';
@@ -13,7 +12,7 @@ class CustomDropdown extends StatelessWidget {
     super.key,
     required this.label,
     required this.items,
-    required this.value,
+    this.value,
     required this.onChanged,
   });
 
@@ -32,9 +31,9 @@ class CustomDropdown extends StatelessWidget {
         ),
         const SizedBox(height: 8.0),
         Container(
-          width: double.infinity, // Allow container to take full width
+          width: double.infinity, // Ensure the dropdown takes up the full width
           decoration: BoxDecoration(
-            color: AppColors.background,
+            color: Colors.white, // White background for better contrast
             borderRadius: BorderRadius.circular(12.0),
             border: Border.all(
               color: AppColors.primary.withOpacity(0.4),
@@ -43,8 +42,8 @@ class CustomDropdown extends StatelessWidget {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 12.0),
           child: DropdownButtonFormField<String>(
-            isExpanded: true, // Make dropdown take up all available width
-            value: value,
+            isExpanded: true, // Ensure dropdown content takes up all available width
+            value: items.contains(value) ? value : null, // Reset value if invalid
             decoration: const InputDecoration(
               border: InputBorder.none,
             ),
@@ -64,12 +63,16 @@ class CustomDropdown extends StatelessWidget {
                 value: item,
                 child: Text(
                   item,
-                  overflow: TextOverflow.ellipsis, // Handle overflow with ellipsis
+                  overflow: TextOverflow.ellipsis, // Handle overflow gracefully
                   maxLines: 1,
                 ),
               );
             }).toList(),
             onChanged: onChanged,
+            icon: Icon(
+              Icons.arrow_drop_down,
+              color: AppColors.textSecondary.withOpacity(0.8),
+            ),
           ),
         ),
       ],

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:auto_size_text/auto_size_text.dart'; // Importing auto_size_text package for text resizing
+import 'package:auto_size_text/auto_size_text.dart'; // Import pakej auto_size_text untuk teks yang boleh diubah saiz
 import 'package:google_fonts/google_fonts.dart';
 import 'colors.dart';
 import 'navbar.dart';
@@ -13,22 +13,21 @@ class MainMenu extends StatefulWidget {
 }
 
 class _MainMenuState extends State<MainMenu> {
-  int _selectedIndex = 1; // Default index to Main Menu
+  int _selectedIndex = 1; // Indeks lalai untuk Menu Utama
 
-  final List<MenuOption> menuOptions = [
-    MenuOption(icon: Icons.work, label: 'e-Perjawatan', hoverColor: Colors.deepOrange),
-    MenuOption(icon: Icons.school, label: 'e-Internship', hoverColor: Colors.blue),
-    MenuOption(icon: Icons.verified_user, label: 'e-Pensijilan Halal', hoverColor: Colors.green),
-    MenuOption(icon: Icons.store, label: 'S.M.A.R.T Niaga', hoverColor: Colors.purple),
-    MenuOption(icon: Icons.book_online, label: 'e-Tempahan', hoverColor: Colors.cyan),
-    MenuOption(icon: Icons.help_outline, label: 'e-Bantuan', hoverColor: Colors.teal),
+  final List<PilihanMenu> pilihanMenu = [
+    PilihanMenu(icon: Icons.work, label: 'e-Perjawatan', hoverColor: Colors.deepOrange),
+    PilihanMenu(icon: Icons.school, label: 'e-Internship', hoverColor: Colors.blue),
+    PilihanMenu(icon: Icons.verified_user, label: 'e-Pensijilan Halal', hoverColor: Colors.green),
+    PilihanMenu(icon: Icons.store, label: 'S.M.A.R.T Niaga', hoverColor: Colors.purple),
+    PilihanMenu(icon: Icons.book_online, label: 'e-Tempahan', hoverColor: Colors.cyan),
+    PilihanMenu(icon: Icons.help_outline, label: 'e-Bantuan', hoverColor: Colors.teal),
   ];
 
-  final List<InformationOption> infoOptions = [
-    InformationOption(imagePath: 'assets/test.png', label: 'Information 1', description: 'This is a brief description of Information 1.'),
-    InformationOption(imagePath: 'assets/test.png', label: 'Information 2', description: 'This is a brief description of Information 2.'),
-    InformationOption(imagePath: 'assets/test.png', label: 'Information 3', description: 'This is a brief description of Information 3.'),
-    InformationOption(imagePath: 'assets/test.png', label: 'Information 4', description: 'This is a brief description of Information 4.'),
+  final List<PilihanMaklumat> pilihanMaklumat = [
+    PilihanMaklumat(imagePath: 'assets/tourism.png', label: 'Perak’s Business Potentials and Investment Opportunities, Shines In MIDA Invest Series', description: 'The Malaysian Investment Development Authority (MIDA) held its distinguished “MIDA Invest Series – Perak: Unfolding Its Business Potentials”'),
+    PilihanMaklumat(imagePath: 'assets/holdings.png', label: 'Maklumat 2', description: 'Ini adalah deskripsi ringkas Maklumat 2.'),
+    PilihanMaklumat(imagePath: 'assets/tourism.png', label: 'Maklumat 3', description: 'Ini adalah deskripsi ringkas Maklumat 3.'),
   ];
 
   @override
@@ -61,7 +60,7 @@ class _MainMenuState extends State<MainMenu> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Quick Access Section Header
+            // Bahagian Akses Pantas
             Container(
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
@@ -77,7 +76,7 @@ class _MainMenuState extends State<MainMenu> {
               ),
               child: const Center(
                 child: Text(
-                  'Quick Access',
+                  'Akses Pantas',
                   style: TextStyle(
                     fontSize: 22.0,
                     fontWeight: FontWeight.bold,
@@ -88,7 +87,7 @@ class _MainMenuState extends State<MainMenu> {
               ),
             ),
             const SizedBox(height: 16.0),
-            // Menu Buttons Section (2xN grid)
+            // Bahagian Butang Menu (Grid 2xN)
             Container(
               padding: const EdgeInsets.all(20.0),
               decoration: BoxDecoration(
@@ -106,20 +105,20 @@ class _MainMenuState extends State<MainMenu> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2, // 2 icons per row
+                  crossAxisCount: 2, // 2 ikon setiap baris
                   crossAxisSpacing: 16.0,
                   mainAxisSpacing: 16.0,
                   childAspectRatio: 1.0,
                 ),
-                itemCount: menuOptions.length,
+                itemCount: pilihanMenu.length,
                 itemBuilder: (context, index) {
-                  final option = menuOptions[index];
-                  return HoverEffectButton(
+                  final option = pilihanMenu[index];
+                  return ButangHover(
                     icon: option.icon,
                     label: option.label,
                     hoverColor: option.hoverColor,
                     onTap: () {
-                      // Navigate based on the label
+                      // Navigasi berdasarkan label
                       switch (option.label) {
                         case 'e-Perjawatan':
                           Navigator.pushNamed(context, '/ePerjawatan');
@@ -146,7 +145,7 @@ class _MainMenuState extends State<MainMenu> {
               ),
             ),
             const SizedBox(height: 30.0),
-            // Information Section Header
+            // Bahagian Tajuk Maklumat
             Container(
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
@@ -162,7 +161,7 @@ class _MainMenuState extends State<MainMenu> {
               ),
               child: const Center(
                 child: Text(
-                  'Information',
+                  'Maklumat',
                   style: TextStyle(
                     fontSize: 22.0,
                     fontWeight: FontWeight.bold,
@@ -173,7 +172,7 @@ class _MainMenuState extends State<MainMenu> {
               ),
             ),
             const SizedBox(height: 16.0),
-            // Information Carousel Section
+            // Bahagian Karusel Maklumat
             CarouselSlider(
               options: CarouselOptions(
                 height: 320.0,
@@ -185,7 +184,7 @@ class _MainMenuState extends State<MainMenu> {
                 autoPlayAnimationDuration: const Duration(milliseconds: 800),
                 viewportFraction: 0.8,
               ),
-              items: infoOptions.map((option) {
+              items: pilihanMaklumat.map((option) {
                 return Builder(
                   builder: (BuildContext context) {
                     return Container(
@@ -278,29 +277,29 @@ class _MainMenuState extends State<MainMenu> {
   }
 }
 
-class MenuOption {
+class PilihanMenu {
   final IconData icon;
   final String label;
   final Color hoverColor;
 
-  MenuOption({required this.icon, required this.label, required this.hoverColor});
+  PilihanMenu({required this.icon, required this.label, required this.hoverColor});
 }
 
-class InformationOption {
+class PilihanMaklumat {
   final String imagePath;
   final String label;
   final String description;
 
-  InformationOption({required this.imagePath, required this.label, required this.description});
+  PilihanMaklumat({required this.imagePath, required this.label, required this.description});
 }
 
-class HoverEffectButton extends StatefulWidget {
+class ButangHover extends StatefulWidget {
   final IconData icon;
   final String label;
   final Color hoverColor;
   final VoidCallback onTap;
 
-  const HoverEffectButton({
+  const ButangHover({
     super.key,
     required this.icon,
     required this.label,
@@ -309,10 +308,10 @@ class HoverEffectButton extends StatefulWidget {
   });
 
   @override
-  State<HoverEffectButton> createState() => _HoverEffectButtonState();
+  State<ButangHover> createState() => _ButangHoverState();
 }
 
-class _HoverEffectButtonState extends State<HoverEffectButton> {
+class _ButangHoverState extends State<ButangHover> {
   bool _isHovered = false;
 
   void _setHover(bool hover) {
@@ -324,11 +323,11 @@ class _HoverEffectButtonState extends State<HoverEffectButton> {
     final double iconSize = _isHovered ? 42.0 : 36.0;
     final double fontSize = _isHovered ? 16.0 : 14.0;
 
-    // Determine colors based on hover state
+    // Tentukan warna berdasarkan keadaan hover
     const iconColor = Colors.white;
     const textColor = Colors.white;
 
-    // Icon and text widgets
+    // Ikon dan teks
     final iconWidget = Icon(
       widget.icon,
       size: iconSize,

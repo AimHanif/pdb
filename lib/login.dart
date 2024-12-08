@@ -21,11 +21,11 @@ class _AuthScreenState extends State<AuthScreen> {
 
   String get titleText => showLoginForm ? 'Selamat Datang' : 'Daftar Akaun';
   String get subtitleText => showLoginForm
-      ? 'Log in to explore more!'
-      : 'Join us for an amazing experience!';
+      ? 'Log masuk untuk mula!'
+      : 'Sertai kami!';
   String get toggleButtonText => showLoginForm
-      ? "Don't have an account? Sign up"
-      : "Already have an account? Log in";
+      ? "Belum ada akaun? Daftar Masuk"
+      : "Sudah ada akaun? Log Masuk";
 
   @override
   Widget build(BuildContext context) {
@@ -217,13 +217,13 @@ class _AuthScreenState extends State<AuthScreen> {
         children: [
           _buildTextField(
             icon: Icons.email_outlined,
-            hint: 'Email',
+            hint: 'E-mel',
             keyboardType: TextInputType.emailAddress,
           ),
           const SizedBox(height: 20.0),
           _buildTextField(
             icon: Icons.lock_outline,
-            hint: 'Password',
+            hint: 'Kata Laluan',
             obscureText: true,
           ),
           const SizedBox(height: 20.0),
@@ -234,14 +234,14 @@ class _AuthScreenState extends State<AuthScreen> {
                 // Add forgot password functionality here
               },
               child: Text(
-                'Forgot password?',
+                'Lupa Kata Laluan?',
                 style: GoogleFonts.poppins(color: AppColors.textSecondary),
               ),
             ),
           ),
           const SizedBox(height: 20.0),
           _buildActionButton(
-            text: 'Log in',
+            text: 'Log Masuk',
             onPressed: () {
               // Navigate to HomeScreen
               Navigator.pushReplacement(
@@ -264,23 +264,23 @@ class _AuthScreenState extends State<AuthScreen> {
         children: [
           _buildTextField(
             icon: Icons.person_outline,
-            hint: 'Name',
+            hint: 'Nama',
           ),
           const SizedBox(height: 20.0),
           _buildTextField(
             icon: Icons.email_outlined,
-            hint: 'Email',
+            hint: 'E-mel',
             keyboardType: TextInputType.emailAddress,
           ),
           const SizedBox(height: 20.0),
           _buildTextField(
             icon: Icons.lock_outline,
-            hint: 'Password',
+            hint: 'Kata Laluan',
             obscureText: true,
           ),
           const SizedBox(height: 20.0),
           _buildActionButton(
-            text: 'Sign up',
+            text: 'Daftar Akaun',
             onPressed: () {
               // Navigate to HomeScreen after successful registration
               Navigator.push(

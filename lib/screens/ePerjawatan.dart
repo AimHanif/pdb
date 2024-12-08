@@ -6,11 +6,9 @@ import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
 import '../colors.dart';
 import '../navbar.dart';
-
-// Import the custom widgets
+import '../widgets/application_list.dart';
 import '../widgets/custom_dropdown.dart';
 import '../widgets/custom_file_upload_button.dart';
-// If you have CustomDatePicker and CustomNumericField, import them as well
 
 class EPerjawatanScreen extends StatefulWidget {
   const EPerjawatanScreen({super.key});
@@ -26,9 +24,9 @@ class _EPerjawatanScreenState extends State<EPerjawatanScreen> {
 
   List<Map<String, dynamic>> applications = [];
 
-  final List<String> positions = ['Manager', 'Officer', 'Clerk', 'Intern'];
-  final List<String> companies = ['Company A', 'Agency B', 'Department C'];
-  final List<String> departments = ['HR', 'Finance', 'IT', 'Admin'];
+  final List<String> positions = ['Pengurus', 'Pegawai', 'Kerani', 'Tukang Kebun'];
+  final List<String> companies = ['Syarikat Ahza', 'PPD Ipoh', 'JPJ Tanjung Malim'];
+  final List<String> departments = ['Sumber Manusia', 'Kewangan', 'IT', 'Pentadbiran'];
 
   String? selectedPosition;
   String? selectedCompany;
@@ -140,6 +138,7 @@ class _EPerjawatanScreenState extends State<EPerjawatanScreen> {
     });
   }
 
+
   void _resetForm() {
     selectedPosition = null;
     selectedCompany = null;
@@ -166,26 +165,31 @@ class _EPerjawatanScreenState extends State<EPerjawatanScreen> {
 
   void _editApplication(int index) {
     final app = applications[index];
+
     if (app['status'] != 'Pending') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('You can only edit pending applications.')),
       );
       return;
     }
+
     if (app['editCount'] >= 3) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('You cannot edit this application more than 3 times.')),
       );
       return;
     }
+
     selectedPosition = app['position'];
     selectedCompany = app['company'];
     selectedDepartment = app['department'];
     resumePath = app['resumePath'];
     supportingDocs = List<String>.from(app['supportingDocs']);
+
     isEditing = true;
     isCreating = false;
     editingIndex = index;
+
     setState(() {});
   }
 
@@ -210,10 +214,6 @@ class _EPerjawatanScreenState extends State<EPerjawatanScreen> {
       supportingDocs.addAll(result.files.map((f) => f.path!).toList());
       setState(() {});
     }
-  }
-
-  String _formatDate(DateTime date) {
-    return DateFormat('yyyy-MM-dd HH:mm').format(date);
   }
 
   Future<bool> _onWillPop() async {
@@ -363,7 +363,7 @@ class _EPerjawatanScreenState extends State<EPerjawatanScreen> {
             const SizedBox(height: 16.0),
             // Using CustomDropdown for Position
             CustomDropdown(
-              label: 'Position 💼',
+              label: 'Jawatan 💼',
               items: positions,
               value: selectedPosition,
               onChanged: (val) => setState(() {
@@ -373,7 +373,7 @@ class _EPerjawatanScreenState extends State<EPerjawatanScreen> {
             const SizedBox(height: 16.0),
             // Using CustomDropdown for Company/Agency
             CustomDropdown(
-              label: 'Agency / Department 🏢',
+              label: 'Agensi / Jabatan 🏢',
               items: companies,
               value: selectedCompany,
               onChanged: (val) => setState(() {
@@ -383,7 +383,7 @@ class _EPerjawatanScreenState extends State<EPerjawatanScreen> {
             const SizedBox(height: 16.0),
             // Using CustomDropdown for Department
             CustomDropdown(
-              label: 'Department 🗂',
+              label: 'Jabatan 🗂',
               items: departments,
               value: selectedDepartment,
               onChanged: (val) => setState(() {
@@ -393,7 +393,7 @@ class _EPerjawatanScreenState extends State<EPerjawatanScreen> {
             const SizedBox(height: 16.0),
             // Using CustomFileUploadButton for Resume
             CustomFileUploadButton(
-              label: 'Upload Resume (Optional)',
+              label: 'Muat Naik Resume (Jika berkaitan)',
               fileInfo: resumePath != null ? resumePath!.split('/').last : null,
               onTap: _pickResume,
               iconData: Icons.description_outlined,
@@ -401,7 +401,7 @@ class _EPerjawatanScreenState extends State<EPerjawatanScreen> {
             const SizedBox(height: 16.0),
             // Using CustomFileUploadButton for Supporting Docs
             CustomFileUploadButton(
-              label: 'Upload Supporting Docs (Optional)',
+              label: 'Muat Naik Dokument Sokongan (Jika berkaitan)',
               fileInfo: supportingDocs.isEmpty ? null : supportingDocs.length.toString(),
               onTap: _pickSupportingDocuments,
               iconData: Icons.attach_file,
@@ -419,7 +419,7 @@ class _EPerjawatanScreenState extends State<EPerjawatanScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
                 ),
                 child: Text(
-                  isEditing ? 'Save Changes' : 'Submit Application',
+                  isEditing ? 'Simpan' : 'Mohon',
                   style: GoogleFonts.poppins(fontSize: 16.0, fontWeight: FontWeight.bold, color: AppColors.buttonText),
                 ),
               ),
@@ -436,130 +436,10 @@ class _EPerjawatanScreenState extends State<EPerjawatanScreen> {
   }
 
   Widget _buildApplicationsList() {
-    return SingleChildScrollView(
-      key: const ValueKey('listView'),
-      padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0, bottom: 100.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Your Applications 🗃',
-            style: GoogleFonts.poppins(fontSize: 20.0, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-          ),
-          const SizedBox(height: 16.0),
-          ...applications.asMap().entries.map((entry) {
-            final index = entry.key;
-            final app = entry.value;
-            return _buildApplicationCard(app, index);
-          }).toList(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildApplicationCard(Map<String, dynamic> app, int index) {
-    String statusText;
-    Color statusColor;
-
-    switch (app['status'].toLowerCase()) {
-      case 'approved':
-        statusColor = Colors.green;
-        statusText = 'Approved ✅';
-        break;
-      case 'rejected':
-        statusColor = Colors.red;
-        statusText = 'Rejected ❌';
-        break;
-      default:
-        statusColor = Colors.orange;
-        statusText = 'Pending ⌛';
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16.0),
-      decoration: _whiteCardDecoration(),
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildInfoRow('Position', app['position']),
-          _buildInfoRow('Company/Agency/Dept.', app['company']),
-          if ((app['department'] as String).isNotEmpty) _buildInfoRow('Department', app['department']),
-          _buildInfoRow('Application Date', _formatDate(app['applicationDate'])),
-          _buildInfoRow('Last Update Date', _formatDate(app['latestUpdateDate'])),
-          Row(
-            children: [
-              Text('Status: ', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: AppColors.primary)),
-              Text(statusText, style: GoogleFonts.poppins(color: statusColor, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          const SizedBox(height: 12.0),
-          // If pending, show edit/delete. If not, no edit/delete.
-          if (app['status'] == 'Pending')
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                _buildPopupMenu(index),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPopupMenu(int index) {
-    return PopupMenuButton<String>(
-      icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-      onSelected: (value) {
-        if (value == 'edit') {
-          _editApplication(index);
-        } else if (value == 'delete') {
-          _deleteApplication(index);
-        }
-      },
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          value: 'edit',
-          child: Row(
-            children: [
-              const Icon(Icons.edit, color: AppColors.primary),
-              const SizedBox(width: 8.0),
-              Text('Edit', style: GoogleFonts.poppins(color: AppColors.textPrimary)),
-            ],
-          ),
-        ),
-        PopupMenuItem(
-          value: 'delete',
-          child: Row(
-            children: [
-              const Icon(Icons.delete, color: Colors.red),
-              const SizedBox(width: 8.0),
-              Text('Delete', style: GoogleFonts.poppins(color: AppColors.textPrimary)),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        children: [
-          Text(
-            '$label: ',
-            style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: AppColors.primary),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: GoogleFonts.poppins(color: AppColors.textPrimary),
-            ),
-          ),
-        ],
-      ),
+    return ApplicationList(
+      applications: applications,
+      onEdit: (index) => _editApplication(index),
+      onDelete: (index) => _deleteApplication(index),
     );
   }
 

@@ -186,7 +186,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                 ),
                 const SizedBox(height: 8.0),
                 Text(
-                  'Portal Perak Digital 2.0',
+                  'Portal Perak Digital 3.0',
                   style: GoogleFonts.poppins(
                     fontSize: 18.0,
                     color: AppColors.textSecondary,

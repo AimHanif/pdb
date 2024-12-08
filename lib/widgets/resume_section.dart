@@ -88,7 +88,7 @@ class _ResumeSectionState extends State<ResumeSection> {
   final TextStyle headingStyle = GoogleFonts.poppins(
     fontSize: 18.0,
     fontWeight: FontWeight.bold,
-    color: AppColors.primary,
+    color: AppColors.textPrimary,
   );
 
   Widget buildLabeledField(String labelText, Widget field) {

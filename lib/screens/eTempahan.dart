@@ -1,17 +1,13 @@
-// screens/e_tempahan_screen.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 import '../navbar.dart';
 import '../colors.dart';
-
-// Import the custom widgets
 import '../widgets/custom_dropdown.dart';
 import '../widgets/custom_date_picker.dart';
-import '../widgets/custom_time_picker.dart'; // Newly added
+import '../widgets/custom_time_picker.dart';
 import '../widgets/custom_app_bar.dart';
-import '../widgets/booking_list.dart';
 
 class ETempahanScreen extends StatefulWidget {
   const ETempahanScreen({super.key});
@@ -26,36 +22,36 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
   bool isBoxReady = false;
 
   List<Map<String, dynamic>> bookings = [];
+  String? selectedCategory;
+  String? selectedFacility;
+  DateTime? bookingDate;
+  TimeOfDay? bookingTime;
+  String? selectedLokasi;
 
-  String? selectedFacility; // Kemudahan yang ditempah
-  DateTime? bookingDate; // Tarikh Tempahan
-  TimeOfDay? bookingTime; // Masa Tempahan (Changed to TimeOfDay)
-  String? selectedLokasi; // Selected Lokasi
-  // String? location; // Lokasi (Assuming it's a separate field; adjust if not)
-
-  final List<String> facilityOptions = [
-    'Dewan',
-    'Padang',
-    'Bilik Latihan/Auditorium',
-    'Gelanggang'
+  final List<Map<String, dynamic>> categories = [
+    {'label': 'Dewan', 'icon': Icons.home, 'color': Colors.red},
+    {'label': 'Padang', 'icon': Icons.sports_soccer, 'color': Colors.green},
+    {'label': 'Auditorium', 'icon': Icons.meeting_room, 'color': Colors.blue},
+    {'label': 'Gelanggang', 'icon': Icons.sports_basketball, 'color': Colors.amber},
   ];
 
-  final Map<String, List<String>> facilityLocations = {
+  final Map<String, List<String>> facilityOptions = {
     'Dewan': ['Dewan Utama', 'Dewan Kecil'],
     'Padang': ['Padang Besar', 'Padang Kecil'],
-    'Bilik Latihan/Auditorium': ['Auditorium 1', 'Auditorium 2'],
+    'Auditorium': ['Auditorium 1', 'Auditorium 2'],
     'Gelanggang': ['Gelanggang Utama', 'Gelanggang Samping'],
   };
 
-  List<String> currentLokasiOptions = [];
-
+  List<String> currentFacilityOptions = [];
   bool isEditing = false;
-  bool isCreating = false;
+  bool isCreating = true;
   int? editingIndex;
 
   @override
   void initState() {
     super.initState();
+    selectedCategory = 'Dewan';
+    currentFacilityOptions = facilityOptions[selectedCategory] ?? [];
     _initHiveData();
   }
 
@@ -71,73 +67,58 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
   }
 
   void _loadBookings() {
-    final storedBookings = eTempahanBox.get('bookings', defaultValue: []);
-    if (storedBookings is List) {
-      bookings = storedBookings
-          .whereType<Map>()
-          .map((booking) => Map<String, dynamic>.from(booking as Map))
-          .toList();
+    final storedData = eTempahanBox.get('bookings', defaultValue: <String, List<Map<String, dynamic>>>{});
+    if (storedData is Map<String, dynamic>) {
+      final categoryBookings = storedData[selectedCategory];
+      if (categoryBookings is List<dynamic>) {
+        bookings = categoryBookings.map((item) {
+          final mapItem = Map<String, dynamic>.from(item);
+          if (mapItem['date'] is String) {
+            mapItem['date'] = DateTime.parse(mapItem['date']);
+          }
+          return mapItem;
+        }).toList();
+      } else {
+        bookings = [];
+      }
     } else {
       bookings = [];
     }
+
+    setState(() {
+      isCreating = bookings.isEmpty;
+    });
   }
 
   void _saveBookings() {
-    try {
-      eTempahanBox.put(
-        'bookings',
-        bookings.map((booking) => Map<String, dynamic>.from(booking)).toList(),
-      );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Booking saved successfully!')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save booking: $e')),
-      );
-      print('Error saving booking: $e');
-    }
+    final currentData = eTempahanBox.get('bookings', defaultValue: <String, List<Map<String, dynamic>>>{});
+    final updatedData = currentData is Map<String, dynamic>
+        ? {...currentData, selectedCategory!: bookings}
+        : {selectedCategory!: bookings};
+
+    eTempahanBox.put('bookings', updatedData);
   }
 
   void _submitBooking() {
-    print('Selected Facility: $selectedFacility');
-    print('Booking Date: $bookingDate');
-    print('Booking Time: $bookingTime');
-    print('Selected Lokasi: $selectedLokasi');
-    // print('Location: $location'); // Not used in Solution 1
-
-    if (selectedFacility == null ||
-        bookingDate == null ||
-        bookingTime == null ||
-        selectedLokasi == null ||
-        selectedLokasi!.isEmpty) { // Removed location checks
+    if (selectedFacility == null || bookingDate == null || bookingTime == null || selectedLokasi == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sila lengkapkan semua maklumat yang diperlukan sebelum meneruskan.')),
+        const SnackBar(content: Text('Please complete all required fields.')),
       );
       return;
     }
 
-    // Convert TimeOfDay to String for storage
-    final String formattedTime = bookingTime!.format(context);
+    final formattedTime = bookingTime!.format(context);
 
     final newBooking = {
-      'selectedFacility': selectedFacility,
-      'bookingDate': bookingDate!.toIso8601String(),
-      'bookingTime': formattedTime, // Store as formatted string
-      'selectedLokasi': selectedLokasi, // Capture Lokasi
-      // 'location': location, // Optional, remove if not needed
+      'facility': selectedFacility!,
+      'date': bookingDate!.toIso8601String(),
+      'time': formattedTime,
+      'location': selectedLokasi!,
       'status': 'Pending',
-      'bookingDateTime': DateTime.now(),
+      'createdDate': DateTime.now().toIso8601String(),
     };
 
     if (isEditing && editingIndex != null) {
-      final booking = bookings[editingIndex!];
-      if (booking['status'] != 'Pending') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('You can only edit pending bookings.')),
-        );
-        return;
-      }
       bookings[editingIndex!] = newBooking;
     } else {
       bookings.add(newBooking);
@@ -149,10 +130,6 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
       isCreating = false;
       isEditing = false;
     });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Booking submitted successfully!')),
-    );
   }
 
   void _resetForm() {
@@ -160,151 +137,99 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
     bookingDate = null;
     bookingTime = null;
     selectedLokasi = null;
-    // location = null; // Removed in Solution 1
-    currentLokasiOptions = [];
+    currentFacilityOptions = [];
     isEditing = false;
     editingIndex = null;
+  }
+
+  void _deleteBooking(int index) {
+    setState(() {
+      bookings.removeAt(index);
+    });
+    _saveBookings();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Booking deleted successfully.')),
+    );
+  }
+
+  void _editBooking(int index) {
+    final booking = bookings[index];
+    setState(() {
+      selectedFacility = booking['facility'];
+      bookingDate = booking['date'] is DateTime
+          ? booking['date']
+          : DateTime.parse(booking['date']);
+      bookingTime = TimeOfDay(
+        hour: int.parse(booking['time'].split(':')[0]),
+        minute: int.parse(booking['time'].split(':')[1]),
+      );
+      selectedLokasi = booking['location'];
+      editingIndex = index;
+      isEditing = true;
+      isCreating = true;
+    });
+  }
+
+  void _selectCategory(String category) {
+    setState(() {
+      selectedCategory = category;
+      currentFacilityOptions = facilityOptions[category] ?? [];
+      _loadBookings();
+      isCreating = bookings.isEmpty;
+    });
+  }
+
+  void _startCreating() {
+    setState(() {
+      isCreating = true;
+      isEditing = false;
+      _resetForm();
+    });
   }
 
   void _refreshStatus() {
     _loadBookings();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('All statuses refreshed!')),
+      const SnackBar(content: Text('Status refreshed successfully.')),
     );
-    setState(() {});
   }
-
-  void _deleteBooking(int index) {
-    bookings.removeAt(index);
-    _saveBookings();
-    setState(() {});
-  }
-
-  void _editBooking(int index) {
-    final booking = bookings[index];
-    if (booking['status'] != 'Pending') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('You can only edit pending bookings.')),
-      );
-      return;
-    }
-    setState(() {
-      selectedFacility = booking['selectedFacility'];
-      bookingDate = DateTime.parse(booking['bookingDate']);
-      // Parse the stored formatted time back to TimeOfDay
-      final parsedTime = _parseTimeOfDay(booking['bookingTime']);
-      bookingTime = parsedTime;
-      selectedLokasi = booking['selectedLokasi'];
-      // location = booking['location']; // Removed in Solution 1
-      currentLokasiOptions = facilityLocations[selectedFacility] ?? [];
-      isEditing = true;
-      isCreating = false;
-      editingIndex = index;
-    });
-  }
-
-  // Helper method to parse time string to TimeOfDay
-  TimeOfDay? _parseTimeOfDay(String timeString) {
-    try {
-      final format = DateFormat.jm(); // Example: 5:08 PM
-      final dateTime = format.parse(timeString);
-      return TimeOfDay(hour: dateTime.hour, minute: dateTime.minute);
-    } catch (e) {
-      print('Error parsing time: $e');
-      return null;
-    }
-  }
-
-  void _startCreating() {
-    _resetForm();
-    isCreating = true;
-    isEditing = false;
-    setState(() {});
-  }
-
-  // Since location is optional, you can remove this method
-  /*
-  Future<void> _pickDocuments() async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.any, allowMultiple: false);
-    if (result != null && result.files.isNotEmpty) {
-      location = result.files.single.path;
-      setState(() {});
-    }
-  }
-  */
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async => await _onWillPop(),
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: CustomAppBar(
-          title: 'e-Tempahan',
-          onLeadingPressed: () {
-            if (isEditing || isCreating) {
-              setState(() {
-                isEditing = false;
-                isCreating = false;
-              });
-            } else {
-              Navigator.pop(context);
-            }
-          },
-        ),
-        body: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 500),
-          transitionBuilder: (child, animation) =>
-              FadeTransition(opacity: animation, child: child),
-          child: _buildContent(),
-        ),
-        bottomNavigationBar: CustomBottomNavBar(
-          selectedIndex: _selectedIndex,
-          onItemTapped: (index) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: CustomAppBar(
+        title: 'e-Tempahan',
+        onLeadingPressed: () {
+          if (isEditing || isCreating) {
             setState(() {
-              _selectedIndex = index;
+              isEditing = false;
+              isCreating = false;
             });
-          },
-        ),
+          } else {
+            Navigator.pop(context);
+          }
+        },
       ),
-    );
-  }
-
-  Widget _buildContent() {
-    if (isCreating || isEditing || bookings.isEmpty) {
-      return _buildBookingFormWidget();
-    }
-    return Stack(
-      children: [
-        BookingList(
-          bookings: bookings,
-          onEdit: _editBooking,
-          onDelete: _deleteBooking,
-        ),
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: Container(
-            color: AppColors.background,
+      body: Column(
+        children: [
+          _buildCategoryCards(),
+          Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _startCreating,
-                    icon: const Icon(Icons.add, size: 18.0, color: AppColors.textPrimary),
+                    icon: const Text('  ➕', style: TextStyle(fontSize: 18.0)),
                     label: Text(
-                      'Add Booking',
-                      style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary),
+                      'Add Application',
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       padding: const EdgeInsets.symmetric(vertical: 15.0),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.0)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
                     ),
                   ),
                 ),
@@ -312,40 +237,176 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _refreshStatus,
-                    icon: const Icon(Icons.refresh, size: 18.0, color: AppColors.textPrimary),
+                    icon: const Text('🔄', style: TextStyle(fontSize: 18.0)),
                     label: Text(
                       'Refresh Status',
-                      style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary),
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       padding: const EdgeInsets.symmetric(vertical: 15.0),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.0)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
                     ),
                   ),
                 ),
               ],
             ),
           ),
-        ),
-      ],
+          Expanded(
+            child: isCreating
+                ? _buildBookingFormWidget()
+                : _buildBookingsList(),
+          ),
+        ],
+      ),
+      bottomNavigationBar: CustomBottomNavBar(
+        selectedIndex: _selectedIndex,
+        onItemTapped: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+      ),
     );
+  }
+
+  Widget _buildCategoryCards() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16.0),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: categories.map((category) {
+            final isSelected = selectedCategory == category['label'];
+            return GestureDetector(
+              onTap: () => _selectCategory(category['label']),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                padding: const EdgeInsets.all(16.0),
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.white : category['color'],
+                  borderRadius: BorderRadius.circular(12.0),
+                  border: isSelected
+                      ? Border.all(color: AppColors.primary, width: 2)
+                      : null,
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      category['icon'],
+                      color: isSelected ? AppColors.textPrimary : Colors.white,
+                      size: 36.0,
+                    ),
+                    const SizedBox(height: 8.0),
+                    Text(
+                      category['label'],
+                      style: GoogleFonts.poppins(
+                        color: isSelected ? AppColors.primary : Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBookingsList() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: bookings.asMap().entries.map((entry) {
+          final index = entry.key;
+          final booking = entry.value;
+
+          final statusText = booking['status'] == 'approved'
+              ? 'Diluluskan ✅'
+              : booking['status'] == 'rejected'
+              ? 'Ditolak ❌'
+              : 'Menunggu ⌛';
+          final statusColor = booking['status'] == 'approved'
+              ? Colors.green
+              : booking['status'] == 'rejected'
+              ? Colors.red
+              : Colors.orange;
+
+          final displayDate = booking['date'] is DateTime
+              ? _formatDate(booking['date'])
+              : _formatDate(DateTime.parse(booking['date']));
+
+          return Container(
+            margin: const EdgeInsets.only(bottom: 16.0),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16.0),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 15.0,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Kemudahan: ${booking['facility']}'),
+                Text('Tarikh: $displayDate'),
+                Text('Masa: ${booking['time']}'),
+                Text('Lokasi: ${booking['location']}'),
+                Text('Status: $statusText', style: TextStyle(color: statusColor)),
+                if (booking['status'] == 'Pending')
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.edit),
+                        onPressed: () => _editBooking(index),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.delete),
+                        onPressed: () => _deleteBooking(index),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    return DateFormat('yyyy-MM-dd HH:mm').format(date);
   }
 
   Widget _buildBookingFormWidget() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Container(
-        decoration: _whiteCardDecoration(),
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16.0),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10.0,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              isEditing ? 'Edit Your Booking 🏢' : 'Submit Your Booking 🏢',
+              isEditing ? 'Ubah Tempahan untuk $selectedCategory' : 'Tempahan untuk $selectedCategory',
               style: GoogleFonts.poppins(
                 fontSize: 20.0,
                 fontWeight: FontWeight.bold,
@@ -353,67 +414,50 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
               ),
             ),
             const SizedBox(height: 16.0),
-            // Using CustomDropdown for Kemudahan
             CustomDropdown(
               label: 'Kemudahan',
-              items: facilityOptions,
+              items: currentFacilityOptions,
               value: selectedFacility,
-              onChanged: (val) {
-                setState(() {
-                  selectedFacility = val;
-                  // Update Lokasi options based on selected Kemudahan
-                  currentLokasiOptions = facilityLocations[val] ?? [];
-                  selectedLokasi = null; // Reset selected Lokasi
-                });
-              },
+              onChanged: (val) => setState(() => selectedFacility = val),
             ),
             const SizedBox(height: 16.0),
-            // Using CustomDatePicker for Tarikh Tempahan
             CustomDatePicker(
               label: 'Tarikh Tempahan',
               selectedDate: bookingDate,
               onDateSelected: (date) => setState(() => bookingDate = date),
             ),
             const SizedBox(height: 16.0),
-            // Using CustomTimePicker for Masa Tempahan
             CustomTimePicker(
-              label: 'Masa Tempahan ⏰',
+              label: 'Masa Tempahan',
               selectedTime: bookingTime,
               onTimeSelected: (time) => setState(() => bookingTime = time),
             ),
             const SizedBox(height: 16.0),
-            // Using CustomDropdown for Lokasi
-            CustomDropdown(
-              label: 'Lokasi',
-              items: currentLokasiOptions,
-              value: selectedLokasi,
-              onChanged: (val) => setState(() => selectedLokasi = val),
+            TextFormField(
+              decoration: InputDecoration(
+                labelText: 'Lokasi',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              onChanged: (value) => setState(() => selectedLokasi = value),
             ),
-            const SizedBox(height: 16.0),
-            // Using CustomFileUploadButton for Lokasi (Optional - Solution 2)
-            /*
-            CustomFileUploadButton(
-              label: 'Dokumen Lokasi 📍',
-              fileInfo: location != null ? location!.split('/').last : null,
-              onTap: _pickDocuments,
-              iconData: Icons.location_on,
-              multiple: false,
-            ),
-            */
             const SizedBox(height: 24.0),
-            // Submit Button
-            SizedBox(
-              width: double.infinity,
+            Center(
               child: ElevatedButton(
                 onPressed: _submitBooking,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  padding: const EdgeInsets.symmetric(vertical: 15.0),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 15.0,
+                    horizontal: 40.0,
+                  ),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.0)),
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
                 ),
                 child: Text(
-                  isEditing ? 'Save Changes' : 'Submit Booking',
+                  isEditing ? 'Simpan Tempahan' : 'Hantar Tempahan',
                   style: GoogleFonts.poppins(
                     fontSize: 16.0,
                     fontWeight: FontWeight.bold,
@@ -426,32 +470,5 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
         ),
       ),
     );
-  }
-
-
-  BoxDecoration _whiteCardDecoration() {
-    return BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16.0),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.1),
-          blurRadius: 15.0,
-          offset: const Offset(0, 5),
-        ),
-      ],
-    );
-  }
-
-  Future<bool> _onWillPop() async {
-    // If editing or creating, revert to list view
-    if (isEditing || isCreating) {
-      setState(() {
-        isEditing = false;
-        isCreating = false;
-      });
-      return false; // Don't pop
-    }
-    return true; // Pop if not editing/creating
   }
 }

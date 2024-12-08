@@ -10,11 +10,11 @@ class BookingList extends StatelessWidget {
   final Function(int) onDelete;
 
   const BookingList({
-    super.key,
+    Key? key,
     required this.bookings,
     required this.onEdit,
     required this.onDelete,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
