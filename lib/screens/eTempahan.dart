@@ -198,19 +198,7 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: CustomAppBar(
-        title: 'e-Tempahan',
-        onLeadingPressed: () {
-          if (isEditing || isCreating) {
-            setState(() {
-              isEditing = false;
-              isCreating = false;
-            });
-          } else {
-            Navigator.pop(context);
-          }
-        },
-      ),
+      appBar: _buildAppBar(),
       body: Column(
         children: [
           _buildCategoryCards(),
@@ -471,4 +459,38 @@ class _ETempahanScreenState extends State<ETempahanScreen> {
       ),
     );
   }
+  AppBar _buildAppBar() {
+    return AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.black),
+        onPressed: () async {
+          // If editing/creating, revert to list, else pop
+          if (isEditing || isCreating) {
+            setState(() {
+              isEditing = false;
+              isCreating = false;
+            });
+          } else {
+            Navigator.pop(context);
+          }
+        },
+      ),
+      flexibleSpace: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppColors.primary, AppColors.accent],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+      ),
+      elevation: 0,
+      title: Text(
+        'e-Tempahan 🏢',
+        style: GoogleFonts.poppins(fontSize: 24.0, fontWeight: FontWeight.bold, color: Colors.black),
+      ),
+      centerTitle: true,
+    );
+  }
+
 }

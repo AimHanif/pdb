@@ -1,16 +1,20 @@
-// profile_screen.dart
-
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
-import 'dart:io';
-import 'dart:async';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:pdb/widgets/resume_section.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:pdb/profile_widgets/profile_bottom_arrows.dart';
+import 'package:pdb/profile_widgets/profile_section_view.dart';
+import 'package:pdb/profile_widgets/profile_step_indicator.dart';
+import 'package:pdb/profile_widgets/resume_section.dart';
+import 'package:pdb/profile_widgets/resume_section_view.dart';
+import 'package:pdb/widgets/custom_app_bar.dart';
 
+// Widgets (moved to separate files)
 import 'colors.dart';
+import 'login.dart';
 import 'navbar.dart';
 import 'profile_config.dart';
 import 'reusable_profile_form.dart';
@@ -28,10 +32,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final PageController _pageController = PageController();
   int _currentPageIndex = 0;
 
+  // For user profile image
   File? _profileImage;
 
+  // Controllers for all fields
   final Map<String, TextEditingController> controllers = {};
 
+  // For saving/loading data
   bool isSaving = false;
   Timer? _debounce;
 
@@ -40,7 +47,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   List<Map<String, String>> languagesList = [];
   List<Map<String, String>> sukanList = [];
   String pengalamanValue = '';
-  bool isHealthy = true; // Changed to bool for kesihatan
+  bool isHealthy = true; // For "kesihatan"
 
   @override
   void initState() {
@@ -101,61 +108,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {});
   }
 
+  // -- Saving logic ------------------------------------------------
   Future<void> _saveData(String key, String value) async {
-    setState(() {
-      isSaving = true;
-    });
+    setState(() => isSaving = true);
     if (_debounce?.isActive ?? false) _debounce!.cancel();
+
     _debounce = Timer(const Duration(milliseconds: 500), () async {
       try {
         await profileBox.put(key, value);
       } finally {
         if (mounted) {
-          setState(() {
-            isSaving = false;
-          });
+          setState(() => isSaving = false);
         }
       }
     });
   }
 
   Future<void> _saveListData(String key, List<Map<String, String>> list) async {
-    setState(() {
-      isSaving = true;
-    });
+    setState(() => isSaving = true);
     if (_debounce?.isActive ?? false) _debounce!.cancel();
+
     _debounce = Timer(const Duration(milliseconds: 500), () async {
       try {
         await profileBox.put(key, list);
       } finally {
         if (mounted) {
-          setState(() {
-            isSaving = false;
-          });
+          setState(() => isSaving = false);
         }
       }
     });
   }
 
-
   Future<void> _saveKesihatan(String key, bool value) async {
-    setState(() {
-      isSaving = true;
-    });
+    setState(() => isSaving = true);
     if (_debounce?.isActive ?? false) _debounce!.cancel();
+
     _debounce = Timer(const Duration(milliseconds: 500), () async {
       try {
         await profileBox.put(key, value);
       } finally {
         if (mounted) {
-          setState(() {
-            isSaving = false;
-          });
+          setState(() => isSaving = false);
         }
       }
     });
   }
 
+  // -- Page navigation logic ----------------------------------------
   void _onPageChanged(int index) {
     setState(() {
       _currentPageIndex = index;
@@ -170,6 +169,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  // -- Image picking logic ------------------------------------------
   Future<void> _pickImage() async {
     try {
       final ImagePicker picker = ImagePicker();
@@ -179,14 +179,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         File? croppedFile = await _cropImage(File(pickedFile.path));
 
         if (croppedFile != null) {
-          setState(() {
-            _profileImage = croppedFile;
-          });
+          setState(() => _profileImage = croppedFile);
           await _saveData('profileImagePath', croppedFile.path);
         }
       }
     } catch (e) {
-      print('Error picking image: $e');
+      debugPrint('Error picking image: $e');
     }
   }
 
@@ -202,9 +200,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             initAspectRatio: CropAspectRatioPreset.square,
             lockAspectRatio: false,
           ),
-          IOSUiSettings(
-            title: 'Crop Image',
-          ),
+          IOSUiSettings(title: 'Crop Image'),
         ],
       );
       if (croppedFile != null) {
@@ -212,242 +208,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
       return null;
     } catch (e) {
-      print('Error cropping image: $e');
+      debugPrint('Error cropping image: $e');
       return null;
-    }
-  }
-
-  // Builds the step indicators at the top
-  Widget _buildTopIndicators() {
-
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(20.0),
-          bottomRight: Radius.circular(20.0),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10.0,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          GestureDetector(
-            onTap: () => _navigateToPage(0),
-            child: _buildStepIndicator(
-              isActive: _currentPageIndex == 0,
-              label: 'Info Peribadi',
-              activeColor: Colors.orange,
-            ),
-          ),
-          const SizedBox(width: 20),
-          GestureDetector(
-            onTap: () => _navigateToPage(1),
-            child: _buildStepIndicator(
-              isActive: _currentPageIndex == 1,
-              label: 'Info Keluarga',
-              activeColor: Colors.purple,
-            ),
-          ),
-          const SizedBox(width: 20),
-          GestureDetector(
-            onTap: () => _navigateToPage(2),
-            child: _buildStepIndicator(
-              isActive: _currentPageIndex == 2,
-              label: 'Akademik',
-              activeColor: Colors.blue,
-            ),
-          ),
-          const SizedBox(width: 20),
-          GestureDetector(
-            onTap: () => _navigateToPage(3),
-            child: _buildStepIndicator(
-              isActive: _currentPageIndex == 3,
-              label: 'Resume',
-              activeColor: Colors.red,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Builds the navigation arrows at the bottom
-  Widget _buildBottomArrows() {
-    final List<String> pageTitles = [
-      'Info Peribadi',
-      'Info Keluarga',
-      'Akademik',
-      'Resume',
-    ];
-
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20.0),
-          topRight: Radius.circular(20.0),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10.0,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Previous Page Button
-          if (_currentPageIndex > 0)
-            GestureDetector(
-              onTap: () => _navigateToPage(_currentPageIndex - 1),
-              child: Column(
-                children: [
-                  ElevatedButton(
-                    onPressed: () => _navigateToPage(_currentPageIndex - 1),
-                    style: ElevatedButton.styleFrom(
-                      shape: const CircleBorder(),
-                      padding: const EdgeInsets.all(12.0),
-                      backgroundColor: _getArrowColor(_currentPageIndex - 1),
-                    ),
-                    child: const Icon(Icons.arrow_back, color: Colors.white),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    pageTitles[_currentPageIndex - 1],
-                    style: GoogleFonts.poppins(
-                      fontSize: 12.0,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else
-            const SizedBox(width: 80),
-
-          // Next Page Button
-          if (_currentPageIndex < pageTitles.length - 1)
-            GestureDetector(
-              onTap: () => _navigateToPage(_currentPageIndex + 1),
-              child: Column(
-                children: [
-                  ElevatedButton(
-                    onPressed: () => _navigateToPage(_currentPageIndex + 1),
-                    style: ElevatedButton.styleFrom(
-                      shape: const CircleBorder(),
-                      padding: const EdgeInsets.all(12.0),
-                      backgroundColor: _getArrowColor(_currentPageIndex + 1),
-                    ),
-                    child: const Icon(Icons.arrow_forward, color: Colors.white),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    pageTitles[_currentPageIndex + 1],
-                    style: GoogleFonts.poppins(
-                      fontSize: 12.0,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else
-            const SizedBox(width: 80),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStepIndicator({
-    required bool isActive,
-    required String label,
-    required Color activeColor,
-  }) {
-    return Column(
-      children: [
-        CircleAvatar(
-          radius: 10.0,
-          backgroundColor: isActive ? activeColor : Colors.grey,
-        ),
-        const SizedBox(height: 4.0),
-        Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 12.0,
-            color: isActive ? activeColor : Colors.grey,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Color _getArrowColor(int pageIndex) {
-    switch (pageIndex) {
-      case 0:
-        return Colors.orange;
-      case 1:
-        return Colors.purple;
-      case 2:
-        return Colors.blue;
-      case 3:
-        return Colors.red;
-      default:
-        return Colors.grey;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // If controllers are not yet initialized, show a loading indicator
     if (controllers.isEmpty) {
       return Scaffold(
         backgroundColor: AppColors.background,
-        appBar: AppBar(
-          title: Text(
-            'Profil',
-            style: GoogleFonts.poppins(fontSize: 24.0, fontWeight: FontWeight.bold, color: Colors.white),
-          ),
-          centerTitle: true,
-        ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
+    // Build the specific forms for each section
     final personalForm = ReusableProfileForm(
       fields: personalFields,
       controllers: controllers,
       onSave: _saveData,
     );
-
     final familyForm = ReusableProfileForm(
       fields: familyFields,
       controllers: controllers,
       onSave: _saveData,
     );
-
     final academicsForm = ReusableProfileForm(
       fields: academicsFields,
       controllers: controllers,
       onSave: _saveData,
     );
-
     final resumeSection = ResumeSection(
       skillsList: skillsList,
       languagesList: languagesList,
       sukanList: sukanList,
-      pengalamanList: pengalamanValue.isNotEmpty // Convert single value to list if needed
+      pengalamanList: pengalamanValue.isNotEmpty
           ? [{'experienceName': pengalamanValue, 'duration': ''}]
-          : [], // Adapt to your data structure
+          : [],
       isHealthy: isHealthy,
       onSaveSkills: (key, list) => _saveListData(key, list),
       onSaveLanguages: (key, list) => _saveListData(key, list),
@@ -458,56 +256,59 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppColors.primary, AppColors.accent],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-        elevation: 0,
-        title: Text(
-          'Profil',
-          style: GoogleFonts.poppins(
-            fontSize: 24.0,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        centerTitle: true,
+      appBar: CustomAppBar(
+        title: 'Profil',
       ),
       body: Stack(
         children: [
           Column(
             children: [
-              // Step Indicators at the top
-              _buildTopIndicators(),
+              // STEP INDICATORS (moved to profile_step_indicator.dart)
+              ProfileStepIndicator(
+                currentPageIndex: _currentPageIndex,
+                onPageTapped: _navigateToPage,
+              ),
+              // MAIN PAGEVIEW
               Expanded(
                 child: PageView(
                   controller: _pageController,
                   onPageChanged: _onPageChanged,
                   children: [
-                    _buildSectionView(personalForm, _profileImage),
-                    _buildSectionView(familyForm, null),
-                    _buildSectionView(academicsForm, null),
-                    _buildResumeSectionView(resumeSection),
+                    // Personal Section
+                    ProfileSectionView(
+                      currentPageIndex: _currentPageIndex,
+                      pageIndex: 0,
+                      formWidget: personalForm,
+                      imageFile: _profileImage,
+                      onImagePick: _pickImage,
+                    ),
+                    // Family Section
+                    ProfileSectionView(
+                      currentPageIndex: _currentPageIndex,
+                      pageIndex: 1,
+                      formWidget: familyForm,
+                    ),
+                    // Academics Section
+                    ProfileSectionView(
+                      currentPageIndex: _currentPageIndex,
+                      pageIndex: 2,
+                      formWidget: academicsForm,
+                    ),
+                    // Resume Section
+                    ResumeSectionView(
+                      resumeWidget: resumeSection,
+                    ),
                   ],
                 ),
               ),
             ],
           ),
-          // Saving indicator
-          Positioned(
-            top: 20.0,
-            right: 20.0,
-            child: AnimatedOpacity(
-              opacity: isSaving ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 300),
-              child: isSaving
-                  ? Container(
+          // Saving Indicator
+          if (isSaving)
+            Positioned(
+              top: 20.0,
+              right: 20.0,
+              child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                 decoration: BoxDecoration(
                   color: Colors.black54,
@@ -533,17 +334,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ],
                 ),
-              )
-                  : const SizedBox.shrink(),
+              ),
             ),
-          ),
         ],
       ),
-      // Arrows are placed above the navbar at the bottom
+      // BOTTOM NAVIGATION BAR (includes the bottom arrows)
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildBottomArrows(),
+          // BOTTOM ARROWS (moved to profile_bottom_arrows.dart)
+          ProfileBottomArrows(
+            currentPageIndex: _currentPageIndex,
+            onPageTapped: _navigateToPage,
+          ),
           CustomBottomNavBar(
             selectedIndex: _selectedIndex,
             onItemTapped: (index) {
@@ -554,71 +357,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildSectionView(Widget formWidget, File? imageFile) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          if (_currentPageIndex == 0)
-            Center(
-              child: GestureDetector(
-                onTap: _pickImage,
-                child: Container(
-                  padding: const EdgeInsets.all(4.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 20.0,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: CircleAvatar(
-                    radius: 60.0,
-                    backgroundColor: AppColors.accent.withOpacity(0.1),
-                    backgroundImage: imageFile != null ? FileImage(imageFile) : null,
-                    child: imageFile == null
-                        ? Icon(
-                      FontAwesomeIcons.user,
-                      size: 50.0,
-                      color: AppColors.primary.withOpacity(0.8),
-                    )
-                        : null,
-                  ),
-                ),
-              ),
-            ),
-          const SizedBox(height: 24.0),
-          Container(
-            padding: const EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16.0),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 15.0,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: formWidget,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildResumeSectionView(Widget resumeWidget) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: resumeWidget,
     );
   }
 }

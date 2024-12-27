@@ -196,7 +196,7 @@ class _EPensijilanHalalScreenState extends State<EPensijilanHalalScreen> {
   AppBar _buildAppBar() {
     return AppBar(
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        icon: const Icon(Icons.arrow_back, color: Colors.black),
         onPressed: () {
           Navigator.pop(context);
         },
@@ -213,7 +213,7 @@ class _EPensijilanHalalScreenState extends State<EPensijilanHalalScreen> {
       elevation: 0,
       title: Text(
         'e-Pensijilan Halal',
-        style: GoogleFonts.poppins(fontSize: 24.0, fontWeight: FontWeight.bold, color: Colors.white),
+        style: GoogleFonts.poppins(fontSize: 24.0, fontWeight: FontWeight.bold, color: Colors.black),
       ),
       centerTitle: true,
     );
@@ -239,7 +239,7 @@ class _EPensijilanHalalScreenState extends State<EPensijilanHalalScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _startCreating,
-                    icon: const Icon(Icons.add, size: 18.0),
+                    icon: const Text('  ➕', style: TextStyle(fontSize: 18.0)),
                     label: Text(
                       'Add Application',
                       style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
@@ -255,7 +255,7 @@ class _EPensijilanHalalScreenState extends State<EPensijilanHalalScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _refreshStatus,
-                    icon: const Icon(Icons.refresh, size: 18.0),
+                    icon: const Text('🔄', style: TextStyle(fontSize: 18.0)),
                     label: Text(
                       'Refresh Status',
                       style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textPrimary),

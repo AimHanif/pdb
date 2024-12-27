@@ -24,6 +24,14 @@ class _EPerjawatanScreenState extends State<EPerjawatanScreen> {
 
   List<Map<String, dynamic>> applications = [];
 
+  final fieldConfigurations = [
+    {'label': 'Position', 'key': 'position'},
+    {'label': 'Company', 'key': 'company'},
+    {'label': 'Department', 'key': 'department'},
+    {'label': 'Application Date', 'key': 'applicationDate'},
+    {'label': 'Status', 'key': 'status'},
+  ];
+
   final List<String> positions = ['Pengurus', 'Pegawai', 'Kerani', 'Tukang Kebun'];
   final List<String> companies = ['Syarikat Ahza', 'PPD Ipoh', 'JPJ Tanjung Malim'];
   final List<String> departments = ['Sumber Manusia', 'Kewangan', 'IT', 'Pentadbiran'];
@@ -255,7 +263,7 @@ class _EPerjawatanScreenState extends State<EPerjawatanScreen> {
   AppBar _buildAppBar() {
     return AppBar(
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        icon: const Icon(Icons.arrow_back, color: Colors.black),
         onPressed: () async {
           // If editing/creating, revert to list, else pop
           if (isEditing || isCreating) {
@@ -280,7 +288,7 @@ class _EPerjawatanScreenState extends State<EPerjawatanScreen> {
       elevation: 0,
       title: Text(
         'e-Perjawatan 🏢',
-        style: GoogleFonts.poppins(fontSize: 24.0, fontWeight: FontWeight.bold, color: Colors.white),
+        style: GoogleFonts.poppins(fontSize: 24.0, fontWeight: FontWeight.bold, color: Colors.black),
       ),
       centerTitle: true,
     );
@@ -436,10 +444,11 @@ class _EPerjawatanScreenState extends State<EPerjawatanScreen> {
   }
 
   Widget _buildApplicationsList() {
-    return ApplicationList(
+    return   ApplicationList(
       applications: applications,
-      onEdit: (index) => _editApplication(index),
-      onDelete: (index) => _deleteApplication(index),
+      fieldConfigurations: fieldConfigurations,
+      onEdit: (index) => print('Edit application at $index'),
+      onDelete: (index) => print('Delete application at $index'),
     );
   }
 

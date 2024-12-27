@@ -243,15 +243,10 @@ class _AuthScreenState extends State<AuthScreen> {
           _buildActionButton(
             text: 'Log Masuk',
             onPressed: () {
-              // Navigate to HomeScreen
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const HomeScreen(),
-                ),
-              );
+              _showSuccessDialog('Log masuk berjaya! Selamat datang kembali! 🎊');
             },
           ),
+
         ],
       ),
     );
@@ -282,15 +277,10 @@ class _AuthScreenState extends State<AuthScreen> {
           _buildActionButton(
             text: 'Daftar Akaun',
             onPressed: () {
-              // Navigate to HomeScreen after successful registration
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const HomeScreen(),
-                ),
-              );
+              _showSuccessDialog('Pendaftaran berjaya! Selamat datang! 🌟');
             },
           ),
+
         ],
       ),
     );
@@ -347,4 +337,66 @@ class _AuthScreenState extends State<AuthScreen> {
       ),
     );
   }
+
+  void _showSuccessDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: AppColors.cardBackground,
+          contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "🎉",
+                style: TextStyle(fontSize: 48),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const HomeScreen(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  "OK",
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.buttonText,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
 }

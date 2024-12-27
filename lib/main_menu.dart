@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:auto_size_text/auto_size_text.dart'; // Import pakej auto_size_text untuk teks yang boleh diubah saiz
+import 'package:auto_size_text/auto_size_text.dart'; // auto_size_text
 import 'package:google_fonts/google_fonts.dart';
+
 import 'colors.dart';
 import 'navbar.dart';
 
@@ -13,7 +14,7 @@ class MainMenu extends StatefulWidget {
 }
 
 class _MainMenuState extends State<MainMenu> {
-  int _selectedIndex = 1; // Indeks lalai untuk Menu Utama
+  int _selectedIndex = 1; // Default to "Menu Utama"
 
   final List<PilihanMenu> pilihanMenu = [
     PilihanMenu(icon: Icons.work, label: 'e-Perjawatan', hoverColor: Colors.deepOrange),
@@ -25,9 +26,22 @@ class _MainMenuState extends State<MainMenu> {
   ];
 
   final List<PilihanMaklumat> pilihanMaklumat = [
-    PilihanMaklumat(imagePath: 'assets/tourism.png', label: 'Perak’s Business Potentials and Investment Opportunities, Shines In MIDA Invest Series', description: 'The Malaysian Investment Development Authority (MIDA) held its distinguished “MIDA Invest Series – Perak: Unfolding Its Business Potentials”'),
-    PilihanMaklumat(imagePath: 'assets/holdings.png', label: 'Maklumat 2', description: 'Ini adalah deskripsi ringkas Maklumat 2.'),
-    PilihanMaklumat(imagePath: 'assets/tourism.png', label: 'Maklumat 3', description: 'Ini adalah deskripsi ringkas Maklumat 3.'),
+    PilihanMaklumat(
+      imagePath: 'assets/tourism.png',
+      label: 'Perak’s Business Potentials and Investment Opportunities',
+      description:
+      'Perak: Unfolding Its Business Potentials',
+    ),
+    PilihanMaklumat(
+      imagePath: 'assets/2.png',
+      label: 'Positive developments in Perak',
+      description: 'Business consultant Zairul Annuar Mohd Zin had taken to social media to express his gratitude for their help.',
+    ),
+    PilihanMaklumat(
+      imagePath: 'assets/3.png',
+      label: 'Perak’s Sultan Nazrin presents state awards',
+      description: 'The Sultan of Perak, Sultan Nazrin Shah, today presented state awards and medals to 56 people.',
+    ),
   ];
 
   @override
@@ -50,7 +64,7 @@ class _MainMenuState extends State<MainMenu> {
           style: GoogleFonts.poppins(
             fontSize: 24.0,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: Colors.black,
           ),
         ),
         centerTitle: true,
@@ -60,7 +74,7 @@ class _MainMenuState extends State<MainMenu> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Bahagian Akses Pantas
+            // ===== Section: Akses Pantas =====
             Container(
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
@@ -87,7 +101,8 @@ class _MainMenuState extends State<MainMenu> {
               ),
             ),
             const SizedBox(height: 16.0),
-            // Bahagian Butang Menu (Grid 2xN)
+
+            // ===== Section: Butang Menu (Grid) =====
             Container(
               padding: const EdgeInsets.all(20.0),
               decoration: BoxDecoration(
@@ -102,10 +117,10 @@ class _MainMenuState extends State<MainMenu> {
                 ],
               ),
               child: GridView.builder(
-                shrinkWrap: true,
+                shrinkWrap: true, // so GridView won't expand infinitely
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2, // 2 ikon setiap baris
+                  crossAxisCount: 2, // 2 icons per row
                   crossAxisSpacing: 16.0,
                   mainAxisSpacing: 16.0,
                   childAspectRatio: 1.0,
@@ -118,7 +133,7 @@ class _MainMenuState extends State<MainMenu> {
                     label: option.label,
                     hoverColor: option.hoverColor,
                     onTap: () {
-                      // Navigasi berdasarkan label
+                      // Navigation based on label
                       switch (option.label) {
                         case 'e-Perjawatan':
                           Navigator.pushNamed(context, '/ePerjawatan');
@@ -145,9 +160,10 @@ class _MainMenuState extends State<MainMenu> {
               ),
             ),
             const SizedBox(height: 30.0),
-            // Bahagian Tajuk Maklumat
+
+            // ===== Section: Tajuk Maklumat =====
             Container(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(14.0), // Reduced from 16.0
               decoration: BoxDecoration(
                 color: AppColors.textPrimary,
                 borderRadius: BorderRadius.circular(16.0),
@@ -171,11 +187,12 @@ class _MainMenuState extends State<MainMenu> {
                 ),
               ),
             ),
-            const SizedBox(height: 16.0),
-            // Bahagian Karusel Maklumat
+            const SizedBox(height: 14.0), // Reduced from 16.0
+
+            // ===== Section: Karusel Maklumat =====
             CarouselSlider(
               options: CarouselOptions(
-                height: 320.0,
+                height: 300.0, // Reduced from 318.0
                 autoPlay: true,
                 enlargeCenterPage: true,
                 aspectRatio: 16 / 9,
@@ -202,25 +219,27 @@ class _MainMenuState extends State<MainMenu> {
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min, // Ensures Column only takes necessary space
                         children: [
+                          // ===== Gambar =====
                           Padding(
-                            padding: const EdgeInsets.all(8.0),
+                            padding: const EdgeInsets.all(6.0), // Reduced from 8.0
                             child: ClipRRect(
                               borderRadius: const BorderRadius.vertical(
                                 top: Radius.circular(16.0),
                               ),
                               child: Image.asset(
                                 option.imagePath,
-                                height: 150.0,
+                                height: 140.0, // Reduced from 150.0
                                 width: double.infinity,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
                                   return Container(
-                                    height: 150.0,
+                                    height: 140.0, // Match the reduced height
                                     color: Colors.grey.shade200,
                                     child: const Icon(
                                       Icons.image,
-                                      size: 60.0,
+                                      size: 50.0,
                                       color: Colors.grey,
                                     ),
                                   );
@@ -228,8 +247,10 @@ class _MainMenuState extends State<MainMenu> {
                               ),
                             ),
                           ),
+
+                          // ===== Tajuk Maklumat =====
                           Padding(
-                            padding: const EdgeInsets.all(8.0),
+                            padding: const EdgeInsets.all(6.0), // Reduced from 8.0
                             child: Center(
                               child: AutoSizeText(
                                 option.label,
@@ -244,15 +265,29 @@ class _MainMenuState extends State<MainMenu> {
                               ),
                             ),
                           ),
+
+                          // ===== Deskripsi Maklumat (Scrollable) =====
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-                            child: Text(
-                              option.description,
-                              style: GoogleFonts.poppins(
-                                fontSize: 14.0,
-                                color: AppColors.textSecondary,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                              vertical: 4.0, // Reduced from 8.0
+                            ),
+                            child: Container(
+                              height: 60.0, // Further reduced from 80.0
+                              decoration: BoxDecoration(
+                                color: Colors.transparent,
+                                borderRadius: BorderRadius.circular(8.0),
                               ),
-                              textAlign: TextAlign.center,
+                              child: SingleChildScrollView(
+                                child: Text(
+                                  option.description,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14.0,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -282,7 +317,11 @@ class PilihanMenu {
   final String label;
   final Color hoverColor;
 
-  PilihanMenu({required this.icon, required this.label, required this.hoverColor});
+  PilihanMenu({
+    required this.icon,
+    required this.label,
+    required this.hoverColor,
+  });
 }
 
 class PilihanMaklumat {
@@ -290,7 +329,11 @@ class PilihanMaklumat {
   final String label;
   final String description;
 
-  PilihanMaklumat({required this.imagePath, required this.label, required this.description});
+  PilihanMaklumat({
+    required this.imagePath,
+    required this.label,
+    required this.description,
+  });
 }
 
 class ButangHover extends StatefulWidget {
@@ -323,11 +366,9 @@ class _ButangHoverState extends State<ButangHover> {
     final double iconSize = _isHovered ? 42.0 : 36.0;
     final double fontSize = _isHovered ? 16.0 : 14.0;
 
-    // Tentukan warna berdasarkan keadaan hover
     const iconColor = Colors.white;
     const textColor = Colors.white;
 
-    // Ikon dan teks
     final iconWidget = Icon(
       widget.icon,
       size: iconSize,

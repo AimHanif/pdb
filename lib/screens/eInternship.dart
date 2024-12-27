@@ -287,7 +287,7 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
   AppBar _buildAppBar() {
     return AppBar(
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        icon: const Icon(Icons.arrow_back, color: Colors.black),
         onPressed: () async {
           // If editing/creating, revert to list, else pop
           if (isEditing || isCreating) {
@@ -312,7 +312,7 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
       elevation: 0,
       title: Text(
         'e-Internship 🏢',
-        style: GoogleFonts.poppins(fontSize: 24.0, fontWeight: FontWeight.bold, color: Colors.white),
+        style: GoogleFonts.poppins(fontSize: 24.0, fontWeight: FontWeight.bold, color: Colors.black),
       ),
       centerTitle: true,
     );
@@ -338,7 +338,7 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _startCreating,
-                    icon: const Icon(Icons.add, size: 18.0), // Changed to Icon
+                    icon: const Text('  ➕', style: TextStyle(fontSize: 18.0)),
                     label: Text(
                       'Add Application',
                       style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
@@ -354,7 +354,7 @@ class _EInternshipScreenState extends State<EInternshipScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _refreshStatus,
-                    icon: const Icon(Icons.refresh, size: 18.0), // Changed to Icon
+                    icon: const Text('🔄', style: TextStyle(fontSize: 18.0)),
                     label: Text(
                       'Refresh Status',
                       style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textPrimary),

@@ -1,46 +1,38 @@
-// widgets/application_card.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
-import 'info_row.dart';
-import 'reusable_popup_menu.dart';
 import '../colors.dart';
 
 class ApplicationCard extends StatelessWidget {
-  final Map<String, dynamic> application;
-  final int index;
+  final List<Map<String, String?>> fields; // Dynamic fields
+  final String status;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   const ApplicationCard({
     super.key,
-    required this.application,
-    required this.index,
+    required this.fields,
+    required this.status,
     required this.onEdit,
     required this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
-    String statusText;
     Color statusColor;
-
-    switch (application['status'].toLowerCase()) {
+    switch (status.toLowerCase()) {
       case 'approved':
         statusColor = Colors.green;
-        statusText = 'Approved ✅';
         break;
       case 'rejected':
         statusColor = Colors.red;
-        statusText = 'Rejected ❌';
         break;
       default:
         statusColor = Colors.orange;
-        statusText = 'Pending ⌛';
     }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16.0),
+      padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.0),
@@ -52,66 +44,56 @@ class ApplicationCard extends StatelessWidget {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          InfoRow(
-            label: 'Position',
-            valueWidget: Text(application['position'] ?? '-'),
-          ),
-          InfoRow(
-            label: 'Company/Agency/Dept.',
-            valueWidget: Text(application['company'] ?? '-'),
-          ),
-          InfoRow(
-            label: 'Department',
-            valueWidget: Text(application['department'] ?? '-'),
-          ),
-          InfoRow(
-            label: 'Application Date',
-            valueWidget: Text(_formatDate(application['applicationDate'])),
-          ),
-          InfoRow(
-            label: 'Last Update Date',
-            valueWidget: Text(_formatDate(application['latestUpdateDate'])),
-          ),
+          ...fields.map((field) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${field['label']}: ',
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                  ),
+                  Expanded(
+                    child: Text(
+                      field['value'] ?? '-',
+                      style: GoogleFonts.poppins(),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+          const SizedBox(height: 12.0),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Status: ',
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
-                ),
-              ),
-              Text(
-                statusText,
+                'Status: $status',
                 style: GoogleFonts.poppins(
                   color: statusColor,
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit, color: Colors.blue),
+                    onPressed: onEdit,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: onDelete,
+                  ),
+                ],
+              ),
             ],
           ),
-          const SizedBox(height: 12.0),
-          // If pending, show edit/delete options
-          if (application['status'].toLowerCase() == 'pending')
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                ReusablePopupMenu(
-                  onEdit: onEdit,
-                  onDelete: onDelete,
-                ),
-              ],
-            ),
         ],
       ),
     );
-  }
-
-  String _formatDate(DateTime date) {
-    return DateFormat('yyyy-MM-dd HH:mm').format(date);
   }
 }

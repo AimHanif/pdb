@@ -15,7 +15,7 @@ class CustomFileUploadButton extends StatelessWidget {
     required this.label,
     this.fileInfo,
     required this.onTap,
-    required this.iconData,
+    this.iconData = Icons.attach_file, // Default value for iconData
     this.multiple = false,
   });
 

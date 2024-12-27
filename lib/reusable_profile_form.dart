@@ -109,7 +109,7 @@ class _ReusableProfileFormState extends State<ReusableProfileForm> {
             style: GoogleFonts.poppins(
               fontSize: 16.0,
               fontWeight: FontWeight.w600,
-              color: AppColors.primary,
+              color: AppColors.text,
             ),
           ),
           const SizedBox(height: 8.0),
@@ -140,7 +140,7 @@ class _ReusableProfileFormState extends State<ReusableProfileForm> {
             style: GoogleFonts.poppins(
               fontSize: 16.0,
               fontWeight: FontWeight.w600,
-              color: AppColors.primary,
+              color: AppColors.text,
             ),
           ),
           const SizedBox(height: 8.0),
@@ -176,7 +176,7 @@ class _ReusableProfileFormState extends State<ReusableProfileForm> {
           style: GoogleFonts.poppins(
             fontSize: 16.0,
             fontWeight: FontWeight.w600,
-            color: AppColors.primary,
+            color: AppColors.text,
           ),
         ),
         const SizedBox(height: 8.0),

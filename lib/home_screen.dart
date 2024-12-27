@@ -18,7 +18,6 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
   Widget _getScreenForIndex(int index) {
-    // Navigate between the three main screens
     switch (index) {
       case 0:
         return const HomeScreenContent();
@@ -36,31 +35,22 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        // Gradient AppBar for a modern and appealing effect
         flexibleSpace: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: const [AppColors.primary, AppColors.accent],
+              colors: [AppColors.primary, AppColors.accent],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
           ),
         ),
         elevation: 0,
-        leading: Navigator.canPop(context)
-            ? IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context); // Only pop if a previous screen exists
-          },
-        )
-            : null,
         title: Text(
           'Dashboard',
           style: GoogleFonts.poppins(
             fontSize: 24.0,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: Colors.black,
           ),
         ),
         centerTitle: true,
@@ -92,8 +82,8 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
   String idNumber = 'N/A';
   String lastLogin = 'Unknown';
   String verifiedAt = 'Unknown';
-  File? _profileImage; // To hold the loaded profile image
-  bool _isAcknowledged = false; // To track if the user has acknowledged
+  File? _profileImage;
+  bool _isAcknowledged = false;
 
   @override
   void initState() {
@@ -104,27 +94,17 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
   void _loadProfileData() async {
     profileBox = await Hive.openBox('profileData');
 
-    // Full Name
     fullName = profileBox.get('fullName', defaultValue: 'Pengguna');
-
-    // Load ID Pengguna directly from the profile box (not generated randomly)
     idNumber = profileBox.get('idNumber', defaultValue: 'N/A');
-
-    // Log Masuk Terakhir: Show old login time and then update to current
-    String oldLogin = profileBox.get('lastLogin', defaultValue: 'Unknown');
-    lastLogin = oldLogin; // Display the old login time
-    profileBox.put('lastLogin', DateTime.now().toString()); // Update for next time
-
-    // Akuan Pada (verifiedAt)
+    lastLogin = profileBox.get('lastLogin', defaultValue: 'Unknown');
+    profileBox.put('lastLogin', DateTime.now().toString());
     verifiedAt = profileBox.get('verifiedAt', defaultValue: DateTime.now().toString());
 
-    // Load profile image
     String? imagePath = profileBox.get('profileImagePath');
     if (imagePath != null && File(imagePath).existsSync()) {
       _profileImage = File(imagePath);
     }
 
-    // Load acknowledgment status
     _isAcknowledged = profileBox.get('isAcknowledged', defaultValue: false);
 
     setState(() {});
@@ -144,7 +124,6 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Profile Section - Vibrant, modern, and engaging
           Center(
             child: Column(
               children: [
@@ -176,7 +155,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                 ),
                 const SizedBox(height: 16.0),
                 Text(
-                  'Selamat Datang, Encik $fullName',
+                  'Selamat Datang, $fullName',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(
                     fontSize: 22.0,
@@ -196,7 +175,6 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
             ),
           ),
           const SizedBox(height: 30.0),
-          // User Info Card
           Card(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16.0),

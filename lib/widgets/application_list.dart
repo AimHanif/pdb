@@ -1,17 +1,16 @@
-// widgets/application_list.dart
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:pdb/colors.dart';
 import 'application_card.dart';
 
 class ApplicationList extends StatelessWidget {
   final List<Map<String, dynamic>> applications;
+  final List<Map<String, String>> fieldConfigurations;
   final Function(int) onEdit;
   final Function(int) onDelete;
 
   const ApplicationList({
     super.key,
     required this.applications,
+    required this.fieldConfigurations,
     required this.onEdit,
     required this.onDelete,
   });
@@ -19,30 +18,26 @@ class ApplicationList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0, bottom: 100.0),
+      padding: const EdgeInsets.all(16.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Your Applications 🗃',
-            style: GoogleFonts.poppins(
-              fontSize: 20.0,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 16.0),
-          ...applications.asMap().entries.map((entry) {
-            final index = entry.key;
-            final app = entry.value;
-            return ApplicationCard(
-              application: app,
-              index: index,
-              onEdit: () => onEdit(index),
-              onDelete: () => onDelete(index),
-            );
-          }),
-        ],
+        children: applications.asMap().entries.map((entry) {
+          final index = entry.key;
+          final app = entry.value;
+
+          final fields = fieldConfigurations.map((config) {
+            return {
+              'label': config['label']!,
+              'value': app[config['key']]?.toString(),
+            };
+          }).toList();
+
+          return ApplicationCard(
+            fields: fields,
+            status: app['status'] ?? 'Pending',
+            onEdit: () => onEdit(index),
+            onDelete: () => onDelete(index),
+          );
+        }).toList(),
       ),
     );
   }

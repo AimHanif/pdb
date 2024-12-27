@@ -27,6 +27,19 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
 
   List<Map<String, dynamic>> applications = [];
 
+  final List<Map<String, String>> fieldConfigurations = [
+    {'label': 'Nama Pemohon', 'key': 'applicantName'},
+    {'label': 'Nombor Kad Pengenalan', 'key': 'applicantIC'},
+    {'label': 'Jenis Bantuan', 'key': 'assistanceType'},
+    {'label': 'Pendapatan Isi Rumah', 'key': 'householdIncome'},
+    {'label': 'Bilangan Tanggungan', 'key': 'dependentsCount'},
+    {'label': 'Status Pekerjaan', 'key': 'employmentStatus'},
+    {'label': 'Sebab Permohonan', 'key': 'assistanceReason'},
+    {'label': 'Dokumen Sokongan', 'key': 'documentsPath'},
+    {'label': 'Tarikh Permohonan', 'key': 'applicationDate'},
+    {'label': 'Tarikh Kemaskini', 'key': 'latestUpdateDate'},
+  ];
+
   String? applicantName; // Nama Pemohon
   String? applicantIC; // Nombor Kad Pengenalan
   String? assistanceType; // Jenis Bantuan
@@ -208,12 +221,7 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
       onWillPop: () async => await _onWillPop(),
       child: Scaffold(
         backgroundColor: AppColors.background,
-        appBar: CustomAppBar(
-          title: 'e-Bantuan',
-          onLeadingPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+        appBar: _buildAppBar(),
         body: AnimatedSwitcher(
           duration: const Duration(milliseconds: 500),
           transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
@@ -239,8 +247,9 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
       children: [
         ApplicationList(
           applications: applications,
-          onEdit: _editApplication,
-          onDelete: _deleteApplication,
+          fieldConfigurations: fieldConfigurations,
+          onEdit: (index) => print('Edit application at $index'),
+          onDelete: (index) => print('Delete application at $index'),
         ),
         Positioned(
           bottom: 0,
@@ -254,7 +263,7 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _startCreating,
-                    icon: const Icon(Icons.add, size: 18.0, color: AppColors.textPrimary),
+                    icon: const Text('  ➕', style: TextStyle(fontSize: 18.0)),
                     label: Text(
                       'Add Application',
                       style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
@@ -270,7 +279,7 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _refreshStatus,
-                    icon: const Icon(Icons.refresh, size: 18.0, color: AppColors.textPrimary),
+                    icon: const Text('🔄', style: TextStyle(fontSize: 18.0)),
                     label: Text(
                       'Refresh Status',
                       style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
@@ -414,4 +423,39 @@ class _EBantuanScreenState extends State<EBantuanScreen> {
     }
     return true; // Pop if not editing/creating
   }
+
+  AppBar _buildAppBar() {
+    return AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.black),
+        onPressed: () async {
+          // If editing/creating, revert to list, else pop
+          if (isEditing || isCreating) {
+            setState(() {
+              isEditing = false;
+              isCreating = false;
+            });
+          } else {
+            Navigator.pop(context);
+          }
+        },
+      ),
+      flexibleSpace: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppColors.primary, AppColors.accent],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+      ),
+      elevation: 0,
+      title: Text(
+        'e-Bantuan 🏢',
+        style: GoogleFonts.poppins(fontSize: 24.0, fontWeight: FontWeight.bold, color: Colors.black),
+      ),
+      centerTitle: true,
+    );
+  }
+
 }

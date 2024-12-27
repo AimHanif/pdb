@@ -119,10 +119,8 @@ List<FieldDefinition> familyFields = [
 List<FieldDefinition> academicsFields = [
   FieldDefinition(key: 'pt3Year', label: 'Tahun (PT3)', type: FieldType.number, validator: validateNotEmpty),
   FieldDefinition(key: 'pt3Exam', label: 'Peperiksaan (PT3)', type: FieldType.text, validator: validateNotEmpty),
-  FieldDefinition(key: 'pt3Rank', label: 'Pangkat (PT3)', type: FieldType.text, validator: validateNotEmpty),
   FieldDefinition(key: 'spmYear', label: 'Tahun (SPM)', type: FieldType.number, validator: validateNotEmpty),
-  FieldDefinition(key: 'spmCertificateType', label: 'Jenis Sijil (SPM)', type: FieldType.text, validator: validateNotEmpty),
-  FieldDefinition(key: 'spmRank', label: 'Pangkat (SPM)', type: FieldType.text, validator: validateNotEmpty),
+  FieldDefinition(key: 'spmCertificateType', label: 'Keputusan (SPM)', type: FieldType.text, validator: validateNotEmpty),
   FieldDefinition(key: 'matriculationCGPA', label: 'CGPA (Matrikulasi)', type: FieldType.number, validator: validateCGPA),
   FieldDefinition(key: 'higherEducationField', label: 'Bidang Pengajian (HE)', type: FieldType.text, validator: validateNotEmpty),
   FieldDefinition(key: 'higherEducationCGPA', label: 'CGPA (HE)', type: FieldType.number, validator: validateCGPA),
